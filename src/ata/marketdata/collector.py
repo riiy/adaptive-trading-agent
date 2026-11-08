@@ -73,7 +73,7 @@ class MarketDataCollector:
         latest = self.repository.latest_open_time(symbol, interval)
 
         if start_time_ms is not None:
-            cursor = start_time_ms
+            cursor = max(0, start_time_ms - start_time_ms % interval_ms)
         elif latest is not None:
             cursor = max(0, latest - overlap_bars * interval_ms)
         else:
@@ -110,6 +110,11 @@ class MarketDataCollector:
                 interval=interval,
                 server_time_ms=server_time_ms,
             )
+            if any(
+                item.open_time_ms < cursor or item.open_time_ms > final_end
+                for item in parsed
+            ):
+                raise MarketDataError("Binance returned a candle outside the requested time range")
             if parsed:
                 result = self.repository.insert_batch(
                     parsed,
