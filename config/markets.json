@@ -1,0 +1,7 @@
+{
+  "venue": "binance_spot",
+  "symbols": ["BTCUSDT", "ETHUSDT"],
+  "timeframes": ["1m", "15m", "1h", "4h"],
+  "market_data_mode": "public_read_only",
+  "authenticated_api_enabled": false
+}
