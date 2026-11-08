@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import StrEnum
 
-from ata.domain import Action, ORDER_ACTIONS, SystemMode
+from ata.domain import ORDER_ACTIONS, Action, SystemMode
 
 
 class AuthorizationCode(StrEnum):
