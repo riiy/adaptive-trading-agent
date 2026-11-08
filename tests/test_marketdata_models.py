@@ -85,3 +85,24 @@ def test_parse_klines_rejects_non_finite_prices() -> None:
         assert "finite" in str(error)
     else:
         raise AssertionError("non-finite prices must be rejected")
+
+
+def test_parse_klines_rejects_fractional_timestamp_and_float_price() -> None:
+    row = raw_kline(0)
+    row[0] = 0.5
+
+    try:
+        parse_klines([row], symbol="BTCUSDT", interval="1m", server_time_ms=60_000)
+    except MarketDataError as error:
+        assert "open_time_ms" in str(error)
+    else:
+        raise AssertionError("fractional timestamps must be rejected")
+
+    row = raw_kline(0)
+    row[1] = 100.5
+    try:
+        parse_klines([row], symbol="BTCUSDT", interval="1m", server_time_ms=60_000)
+    except MarketDataError as error:
+        assert "decimal string" in str(error)
+    else:
+        raise AssertionError("binary floats must be rejected")
