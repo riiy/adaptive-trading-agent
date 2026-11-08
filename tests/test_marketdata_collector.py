@@ -79,6 +79,7 @@ def test_incremental_sync_overlaps_recent_bars_and_is_idempotent(tmp_path) -> No
     assert second.start_time_ms == 0
     assert repository.latest_open_time("BTCUSDT", "1m") == 120_000
 
+
 def test_sync_rejects_rows_outside_requested_range(tmp_path) -> None:
     class OutOfRangeClient:
         def get_klines(self, **_kwargs):
