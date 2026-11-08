@@ -29,7 +29,10 @@ def _utc_milliseconds(value: str | None) -> int | None:
         raise argparse.ArgumentTypeError("timestamp must be ISO-8601") from error
     if parsed.tzinfo is None:
         raise argparse.ArgumentTypeError("timestamp must include a timezone")
-    return int(parsed.astimezone(UTC).timestamp() * 1000)
+    utc_value = parsed.astimezone(UTC)
+    epoch = datetime(1970, 1, 1, tzinfo=UTC)
+    delta = utc_value - epoch
+    return delta.days * 86_400_000 + delta.seconds * 1000 + delta.microseconds // 1000
 
 
 def _database_argument(value: str) -> Path:
