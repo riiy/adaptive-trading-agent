@@ -70,12 +70,15 @@ class Kline:
             raise MarketDataError("high is below another OHLC price")
         if self.low > min(self.open, self.close, self.high):
             raise MarketDataError("low is above another OHLC price")
-        if min(
-            self.volume,
-            self.quote_asset_volume,
-            self.taker_buy_base_asset_volume,
-            self.taker_buy_quote_asset_volume,
-        ) < 0:
+        if (
+            min(
+                self.volume,
+                self.quote_asset_volume,
+                self.taker_buy_base_asset_volume,
+                self.taker_buy_quote_asset_volume,
+            )
+            < 0
+        ):
             raise MarketDataError("volume fields must be non-negative")
         if self.taker_buy_base_asset_volume > self.volume:
             raise MarketDataError("taker-buy base volume exceeds total base volume")
