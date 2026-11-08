@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from ata.marketdata.collector import MarketDataCollector
 from ata.marketdata.models import INTERVAL_MS
 from ata.marketdata.storage import MarketDataRepository
