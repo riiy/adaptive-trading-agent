@@ -37,6 +37,8 @@ class RiskPolicy:
     max_drawdown_fraction: Decimal = Decimal("0.20")
 
     def __post_init__(self) -> None:
+        if not isinstance(self.mode, SystemMode):
+            raise ValueError("mode must be a SystemMode enum value")
         if self.max_concurrent_positions < 1:
             raise ValueError("max_concurrent_positions must be at least 1")
         if not Decimal("0") < self.max_drawdown_fraction <= Decimal("1"):
