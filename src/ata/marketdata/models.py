@@ -22,7 +22,22 @@ class DataConflictError(MarketDataError):
     """Raised when a previously stored candle changes for the same primary key."""
 
 
+def _integer(value: Any, field_name: str) -> int:
+    if isinstance(value, bool):
+        raise MarketDataError(f"{field_name} must be an integer")
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        try:
+            return int(value)
+        except ValueError as error:
+            raise MarketDataError(f"{field_name} must be an integer") from error
+    raise MarketDataError(f"{field_name} must be an integer")
+
+
 def _decimal(value: Any, field_name: str) -> Decimal:
+    if isinstance(value, float):
+        raise MarketDataError(f"{field_name} must be provided as a decimal string")
     try:
         result = Decimal(str(value))
     except (InvalidOperation, ValueError, TypeError) as error:
@@ -146,8 +161,8 @@ def parse_klines(
         if not isinstance(row, list) or len(row) < 11:
             raise MarketDataError(f"kline row {index} has an invalid shape")
         try:
-            open_time_ms = int(row[0])
-            close_time_ms = int(row[6])
+            open_time_ms = _integer(row[0], "open_time_ms")
+            close_time_ms = _integer(row[6], "close_time_ms")
             candle = Kline(
                 symbol=symbol,
                 interval=interval,
@@ -159,7 +174,7 @@ def parse_klines(
                 volume=_decimal(row[5], "volume"),
                 close_time_ms=close_time_ms,
                 quote_asset_volume=_decimal(row[7], "quote_asset_volume"),
-                number_of_trades=int(row[8]),
+                number_of_trades=_integer(row[8], "number_of_trades"),
                 taker_buy_base_asset_volume=_decimal(row[9], "taker_buy_base_asset_volume"),
                 taker_buy_quote_asset_volume=_decimal(row[10], "taker_buy_quote_asset_volume"),
             )
