@@ -119,23 +119,23 @@ class RiskGovernor:
                 AuthorizationCode.DATA_UNHEALTHY,
                 "Market data is not explicitly marked healthy.",
             )
-        if context.current_drawdown_fraction >= self.policy.max_drawdown_fraction:
-            return self._deny(
-                AuthorizationCode.DRAWDOWN_LIMIT,
-                "The configured drawdown guardrail has been reached.",
-            )
-
         if action is Action.EXIT:
             if symbol not in context.open_positions:
                 return self._deny(
                     AuthorizationCode.NO_POSITION_TO_EXIT,
                     "There is no recorded open position for this symbol.",
                 )
-        elif len(context.open_positions) >= self.policy.max_concurrent_positions:
-            return self._deny(
-                AuthorizationCode.POSITION_LIMIT,
-                "The maximum number of concurrent positions has been reached.",
-            )
+        else:
+            if context.current_drawdown_fraction >= self.policy.max_drawdown_fraction:
+                return self._deny(
+                    AuthorizationCode.DRAWDOWN_LIMIT,
+                    "The configured drawdown guardrail blocks new exposure.",
+                )
+            if len(context.open_positions) >= self.policy.max_concurrent_positions:
+                return self._deny(
+                    AuthorizationCode.POSITION_LIMIT,
+                    "The maximum number of concurrent positions has been reached.",
+                )
 
         if self.policy.mode in {SystemMode.RESEARCH_ONLY, SystemMode.SHADOW}:
             return self._deny(
