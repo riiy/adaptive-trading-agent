@@ -1,0 +1,17 @@
+{
+  "mode": "RESEARCH_ONLY",
+  "trading_allowed": false,
+  "account_simulation_allowed": false,
+  "ticket_generation_allowed": false,
+  "allowed_symbols": ["BTCUSDT", "ETHUSDT"],
+  "max_concurrent_positions": 1,
+  "max_drawdown_fraction": "0.20",
+  "max_single_trade_risk_cny": null,
+  "capital_ceiling_cny": 30000,
+  "notes": [
+    "The 20% drawdown threshold is a proposed guardrail, not a loss guarantee.",
+    "No single-trade risk budget has been approved for ATA.",
+    "The legacy 500 CNY single-trade limit belongs to the prior research track and is not silently inherited.",
+    "All account and execution permissions remain disabled."
+  ]
+}
