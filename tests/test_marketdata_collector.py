@@ -28,7 +28,8 @@ class FakeClient:
     def get_klines(self, **kwargs):
         self.calls.append(kwargs)
         return [
-            row for row in self.rows
+            row
+            for row in self.rows
             if kwargs["start_time_ms"] <= int(row[0]) <= kwargs["end_time_ms"]
         ][: kwargs["limit"]]
 
