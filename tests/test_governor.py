@@ -78,7 +78,7 @@ def test_paper_authorization_requires_explicit_permission() -> None:
     assert result.code is AuthorizationCode.ACCOUNT_SIMULATION_DISABLED
 
 
-def test_paper_authorization_is_limited_to_simulation() -> None:
+def test_paper_mode_stays_blocked_until_broker_is_implemented() -> None:
     policy = RiskPolicy(
         mode=SystemMode.PAPER,
         account_simulation_allowed=True,
@@ -89,9 +89,35 @@ def test_paper_authorization_is_limited_to_simulation() -> None:
         healthy_context(),
     )
 
-    assert result.allowed is True
-    assert result.code is AuthorizationCode.AUTHORIZED_PAPER
-    assert "no exchange order" in result.reason
+    assert result.allowed is False
+    assert result.code is AuthorizationCode.PAPER_EXECUTION_NOT_IMPLEMENTED
+
+
+def test_live_mode_stays_blocked_until_adapter_is_implemented() -> None:
+    policy = RiskPolicy(
+        mode=SystemMode.LIVE_GUARDED,
+        trading_allowed=True,
+        ticket_generation_allowed=True,
+    )
+    result = RiskGovernor(policy).authorize(
+        Action.BUY_BTC,
+        "BTCUSDT",
+        healthy_context(),
+    )
+
+    assert result.allowed is False
+    assert result.code is AuthorizationCode.LIVE_EXECUTION_NOT_IMPLEMENTED
+
+
+def test_unknown_action_fails_closed() -> None:
+    result = RiskGovernor().authorize(
+        "BUY_BTC",  # type: ignore[arg-type]
+        "BTCUSDT",
+        healthy_context(),
+    )
+
+    assert result.allowed is False
+    assert result.code is AuthorizationCode.INVALID_ACTION
 
 
 def test_position_limit_blocks_second_concurrent_position() -> None:
