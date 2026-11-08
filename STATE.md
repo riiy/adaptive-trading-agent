@@ -1,7 +1,7 @@
 # Adaptive Trading Agent — STATE.md
 
 **Last updated:** 2026-11-08  
-**Project phase:** M0_FOUNDATION  
+**Project phase:** M1_MARKET_DATA  
 **System mode:** RESEARCH_ONLY  
 **Live trading:** Prohibited
 
@@ -14,18 +14,21 @@ Build a reproducible, risk-governed decision system that can determine whether a
 - Venue: Binance Spot only.
 - Initial symbols: BTCUSDT, ETHUSDT.
 - Direction: long-only spot; no leverage, margin, or futures.
+- Initial research intervals: 15m, 1h, 4h.
+- 1m is deferred until a concrete strategy or execution-model requirement justifies its additional data volume.
 - Maximum concurrent positions: 1.
 - Research capital ceiling: CNY 30,000.
 - Proposed drawdown guardrail: 20%; not a guarantee and not live-authorized.
 - ATA single-trade risk budget: not yet approved.
 - Initial live allocation proposal: CNY 1,000–3,000; not authorized.
-- Runtime: server deployment planned; credentials are not stored in Git.
+- Deployment target: Ubuntu 24.04 LTS, Python 3.12, systemd, SQLite.
 - LLM: research and explanation only; not in a latency-critical execution path.
+- Binance market data: public read-only endpoints; no API key required for M1.
 
 ## 3. Permission state
 
 ```yaml
-project_phase: M0_FOUNDATION
+project_phase: M1_MARKET_DATA
 system_mode: RESEARCH_ONLY
 trading_allowed: false
 account_simulation_allowed: false
@@ -34,23 +37,39 @@ active_strategy: null
 authorized_strategies: []
 ```
 
-These permissions must remain false until separate evidence and approval gates are passed. Creating infrastructure does not grant trading permission.
+These permissions must remain false until separate evidence and approval gates are passed. Creating infrastructure or collecting data does not grant trading permission.
 
-## 4. Current milestone — M0
+## 4. Completed milestone — M0 foundation
 
-Build and verify:
+- Immutable typed decision records.
+- Append-only JSONL decision journal.
+- Fail-closed risk and permission governor.
+- Automated CI.
+- 19 pytest tests passed on the M0 PR head, including research-mode rejection, invalid inputs, unhealthy data, drawdown, position limits, exit-path handling, and journal replay.
+- PR #1 is open and Ready for review; it has not been merged into main.
 
-1. Immutable typed decision records.
-2. Append-only decision journal.
-3. Fail-closed risk and permission governor.
-4. Automated tests and CI.
-5. Read-only market data ingestion only after M0 passes.
+## 5. Current milestone — M1 market data
 
-M0 implementation is complete. GitHub Actions CI passed on the current PR head: Ruff lint, Ruff format, and 19 pytest tests. Tests cover research-mode rejection, invalid inputs, unhealthy data, drawdown, position limits, exit-path handling, and journal replay.
+Implemented on branch `feat/m1-market-data`; PR #2 is a stacked draft targeting `feat/m0-foundation`.
 
-M0 acceptance: tests prove research mode rejects order actions, non-order decisions remain recordable, unhealthy data fails closed, and the journal can replay recorded decisions.
+- Unauthenticated Binance REST client using `data-api.binance.vision`.
+- Server-time-based filtering of unfinished candles.
+- Strict OHLCV, timestamp, interval, and ordering validation.
+- Bounded retry behavior: 429 honors Retry-After; 418 stops immediately.
+- Paginated synchronization with a three-bar overlap.
+- SQLite WAL storage with exact decimal text, transactional writes, immutable candle keys, conflict detection, and SHA-256 batch provenance.
+- CLI commands for market sync and data-quality audit.
+- Ubuntu 24.04 systemd service/timer and installation script.
+- Automated tests have been added; M1 CI validation is pending.
 
-## 5. Research status
+M1 acceptance requires:
+1. Ruff and all automated tests pass.
+2. A live public-REST smoke test on the Ubuntu server completes for both symbols and all three intervals.
+3. Repeated sync is idempotent.
+4. Audit output is reviewed; any historical gaps are explained or backfilled from source, never synthetically filled.
+5. systemd timer and journald operation are verified.
+
+## 6. Research status
 
 No ATA strategy is active or authorized.
 
@@ -60,20 +79,21 @@ Potential future hypotheses:
 
 These are unvalidated hypotheses, not trading signals. Each requires preregistration, baselines, time-ordered out-of-sample tests, cost stress, robustness analysis, and explicit stop criteria.
 
-## 6. Legacy research tracks — unchanged
+## 7. Legacy research tracks — unchanged
 
 - STOCK_RS_PULLBACK_v1 remains ARCHIVED_NON_TRADABLE and INVALIDATED_BY_ENGINE_ERROR.
 - ICT Binance v0.1 remains archived after negative validation/test results.
 - Existing A-share research constraints and the legacy CNY 500 per-trade risk limit remain scoped to that prior track. They are not silently transferred to ATA.
 
-## 7. Next actions
+## 8. Next actions
 
-1. Review and merge PR #1 after repository-owner approval.
-2. Review the server environment without exposing credentials.
-3. Add public, read-only Binance Spot market data ingestion.
-4. Produce a data-quality and replayability report before strategy research.
+1. Complete M1 CI and review PR #2.
+2. Merge PR #1 first, then retarget/rebase PR #2 onto main.
+3. After both PRs are merged, deploy to Ubuntu 24.04 using `deploy/ubuntu24/install.sh`.
+4. Run a one-year historical backfill for 15m, 1h, and 4h BTCUSDT/ETHUSDT.
+5. Enable the five-minute systemd timer and review data-quality reports before strategy research.
 
-## 8. Stop conditions
+## 9. Stop conditions
 
 - Do not add an execution adapter before the research and risk contracts are tested.
 - Do not add more symbols, venues, or LLM agents without evidence that they change a decision.
