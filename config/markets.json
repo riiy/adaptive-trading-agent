@@ -1,7 +1,21 @@
 {
   "venue": "binance_spot",
-  "symbols": ["BTCUSDT", "ETHUSDT"],
-  "timeframes": ["1m", "15m", "1h", "4h"],
+  "symbols": [
+    "BTCUSDT",
+    "ETHUSDT"
+  ],
+  "timeframes": [
+    "15m",
+    "1h",
+    "4h"
+  ],
+  "deferred_timeframes": [
+    "1m"
+  ],
   "market_data_mode": "public_read_only",
-  "authenticated_api_enabled": false
+  "rest_base_url": "https://data-api.binance.vision",
+  "authenticated_api_enabled": false,
+  "notes": [
+    "1m is deferred until a registered strategy or execution-model requirement justifies the added data volume."
+  ]
 }
