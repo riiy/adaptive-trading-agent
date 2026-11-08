@@ -70,6 +70,8 @@ The collector uses Binance's unauthenticated market-data-only REST host, exclude
 
 - [Current state](STATE.md)
 - [Architecture](docs/architecture.md)
+- [Market data contract](docs/market-data.md)
+- [Ubuntu 24.04 deployment](deploy/ubuntu24/README.md)
 - [Risk policy](docs/risk-policy.md)
 - [Research protocol](docs/research-protocol.md)
 
