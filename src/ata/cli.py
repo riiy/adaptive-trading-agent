@@ -61,9 +61,11 @@ def build_parser() -> argparse.ArgumentParser:
     sync.add_argument("--overlap-bars", type=int, default=3)
     sync.add_argument("--start", type=_utc_milliseconds)
     sync.add_argument("--end", type=_utc_milliseconds)
-    sync.add_argument("--db", type=_database_argument, default=Path(
-        os.environ.get("ATA_DB_PATH", "data/ata.sqlite3")
-    ))
+    sync.add_argument(
+        "--db",
+        type=_database_argument,
+        default=Path(os.environ.get("ATA_DB_PATH", "data/ata.sqlite3")),
+    )
     sync.add_argument(
         "--base-url",
         default=os.environ.get("ATA_BINANCE_BASE_URL", "https://data-api.binance.vision"),
