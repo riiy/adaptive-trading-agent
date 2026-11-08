@@ -46,6 +46,8 @@ Build and verify:
 4. Automated tests and CI.
 5. Read-only market data ingestion only after M0 passes.
 
+M0 implementation is complete. GitHub Actions CI passed on the current PR head: Ruff lint, Ruff format, and 19 pytest tests. Tests cover research-mode rejection, invalid inputs, unhealthy data, drawdown, position limits, exit-path handling, and journal replay.
+
 M0 acceptance: tests prove research mode rejects order actions, non-order decisions remain recordable, unhealthy data fails closed, and the journal can replay recorded decisions.
 
 ## 5. Research status
@@ -66,7 +68,7 @@ These are unvalidated hypotheses, not trading signals. Each requires preregistra
 
 ## 7. Next actions
 
-1. Complete M0 implementation and run tests/CI.
+1. Review and merge PR #1 after repository-owner approval.
 2. Review the server environment without exposing credentials.
 3. Add public, read-only Binance Spot market data ingestion.
 4. Produce a data-quality and replayability report before strategy research.
