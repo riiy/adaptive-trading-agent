@@ -38,8 +38,12 @@ python3.12 -m venv "${VENV_DIR}"
 "${VENV_DIR}/bin/python" -m pip install --no-deps "${APP_DIR}"
 
 install -d -o ata -g ata -m 0750 "${DATA_DIR}"
-install -o root -g root -m 0644   "${APP_DIR}/deploy/ubuntu24/ata-market-sync.service"   /etc/systemd/system/ata-market-sync.service
-install -o root -g root -m 0644   "${APP_DIR}/deploy/ubuntu24/ata-market-sync.timer"   /etc/systemd/system/ata-market-sync.timer
+install -o root -g root -m 0644 \
+  "${APP_DIR}/deploy/ubuntu24/ata-market-sync.service" \
+  /etc/systemd/system/ata-market-sync.service
+install -o root -g root -m 0644 \
+  "${APP_DIR}/deploy/ubuntu24/ata-market-sync.timer" \
+  /etc/systemd/system/ata-market-sync.timer
 
 systemctl daemon-reload
 
