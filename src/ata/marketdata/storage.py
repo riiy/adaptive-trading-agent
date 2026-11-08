@@ -146,7 +146,9 @@ class MarketDataRepository:
         if any(item.symbol != symbol or item.interval != interval for item in klines):
             raise ValueError("one ingestion batch must contain a single symbol and interval")
         if any(item.close_time_ms >= fetched_at_server_ms for item in klines):
-            raise ValueError("only candles closed by the recorded Binance server time may be stored")
+            raise ValueError(
+                "only candles closed by the recorded Binance server time may be stored"
+            )
         if any(
             current.open_time_ms <= previous.open_time_ms
             for previous, current in zip(klines, klines[1:], strict=False)
