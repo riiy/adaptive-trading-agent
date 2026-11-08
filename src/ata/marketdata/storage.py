@@ -9,7 +9,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
-from ata.marketdata.models import DataConflictError, INTERVAL_MS, Kline
+from ata.marketdata.models import INTERVAL_MS, DataConflictError, Kline
 
 
 @dataclass(frozen=True, slots=True)
@@ -273,7 +273,7 @@ class MarketDataRepository:
         timestamps = [row[0] for row in rows]
         missing = 0
         examples: list[tuple[int, int]] = []
-        for previous, current in zip(timestamps, timestamps[1:]):
+        for previous, current in zip(timestamps, timestamps[1:], strict=False):
             delta = current - previous
             if delta > interval_ms:
                 missing += max(0, delta // interval_ms - 1)
