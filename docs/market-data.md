@@ -60,3 +60,8 @@ The audit reports row count, first/last open times, and missing interval counts.
 - No account, balance, order, or user-data endpoint.
 - No LLM in the ingestion path.
 - No signal generation, backtest, paper broker, or live execution.
+
+## Official references
+
+- [Binance Spot market-data-only URLs](https://github.com/binance/binance-spot-api-docs/blob/master/faqs/market_data_only.md)
+- [Binance Spot REST API — kline/candlestick data and rate limits](https://github.com/binance/binance-spot-api-docs/blob/master/rest-api.md#klinecandlestick-data)
