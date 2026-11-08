@@ -169,6 +169,11 @@ def test_exit_requires_an_existing_position() -> None:
     assert result.code is AuthorizationCode.NO_POSITION_TO_EXIT
 
 
+def test_invalid_system_mode_is_rejected() -> None:
+    with pytest.raises(ValueError, match="mode must be a SystemMode"):
+        RiskPolicy(mode="RESEARCH_ONLY")  # type: ignore[arg-type]
+
+
 def test_research_mode_cannot_be_configured_with_execution_permissions() -> None:
     with pytest.raises(ValueError, match="research and shadow"):
         RiskPolicy(trading_allowed=True)
