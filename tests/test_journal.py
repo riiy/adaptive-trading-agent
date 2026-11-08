@@ -48,6 +48,18 @@ def test_naive_timestamp_is_rejected() -> None:
         )
 
 
+def test_invalid_action_type_is_rejected() -> None:
+    with pytest.raises(ValueError, match="action must be an Action"):
+        DecisionRecord(
+            action="BUY_BTC",  # type: ignore[arg-type]
+            symbol="BTCUSDT",
+            reason_code="TEST",
+            rationale="test",
+            snapshot_id="snapshot",
+            strategy_version="v0",
+        )
+
+
 def test_buy_action_requires_matching_symbol() -> None:
     with pytest.raises(ValueError, match="BUY_BTC requires"):
         DecisionRecord(
