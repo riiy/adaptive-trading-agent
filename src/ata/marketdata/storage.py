@@ -9,7 +9,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
-from ata.marketdata.models import INTERVAL_MS, DataConflictError, Kline
+from ata.marketdata.models import INTERVAL_MS, DataConflictError, Kline, decimal_text
 
 
 @dataclass(frozen=True, slots=True)
@@ -145,6 +145,13 @@ class MarketDataRepository:
         interval = klines[0].interval
         if any(item.symbol != symbol or item.interval != interval for item in klines):
             raise ValueError("one ingestion batch must contain a single symbol and interval")
+        if any(item.close_time_ms >= fetched_at_server_ms for item in klines):
+            raise ValueError("only candles closed by the recorded Binance server time may be stored")
+        if any(
+            current.open_time_ms <= previous.open_time_ms
+            for previous, current in zip(klines, klines[1:], strict=False)
+        ):
+            raise ValueError("ingestion batch must be strictly chronological and unique")
 
         canonical = [item.to_dict() for item in klines]
         payload_bytes = json.dumps(
@@ -197,16 +204,16 @@ class MarketDataRepository:
             for item in klines:
                 expected = (
                     item.open_time_ms,
-                    str(item.open),
-                    str(item.high),
-                    str(item.low),
-                    str(item.close),
-                    str(item.volume),
+                    decimal_text(item.open),
+                    decimal_text(item.high),
+                    decimal_text(item.low),
+                    decimal_text(item.close),
+                    decimal_text(item.volume),
                     item.close_time_ms,
-                    str(item.quote_asset_volume),
+                    decimal_text(item.quote_asset_volume),
                     item.number_of_trades,
-                    str(item.taker_buy_base_asset_volume),
-                    str(item.taker_buy_quote_asset_volume),
+                    decimal_text(item.taker_buy_base_asset_volume),
+                    decimal_text(item.taker_buy_quote_asset_volume),
                 )
                 existing = connection.execute(
                     select_sql,
@@ -225,16 +232,16 @@ class MarketDataRepository:
                         symbol,
                         interval,
                         item.open_time_ms,
-                        str(item.open),
-                        str(item.high),
-                        str(item.low),
-                        str(item.close),
-                        str(item.volume),
+                        decimal_text(item.open),
+                        decimal_text(item.high),
+                        decimal_text(item.low),
+                        decimal_text(item.close),
+                        decimal_text(item.volume),
                         item.close_time_ms,
-                        str(item.quote_asset_volume),
+                        decimal_text(item.quote_asset_volume),
                         item.number_of_trades,
-                        str(item.taker_buy_base_asset_volume),
-                        str(item.taker_buy_quote_asset_volume),
+                        decimal_text(item.taker_buy_base_asset_volume),
+                        decimal_text(item.taker_buy_quote_asset_volume),
                         run_id,
                     ),
                 )
