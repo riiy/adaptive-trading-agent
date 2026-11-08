@@ -110,10 +110,7 @@ class MarketDataCollector:
                 interval=interval,
                 server_time_ms=server_time_ms,
             )
-            if any(
-                item.open_time_ms < cursor or item.open_time_ms > final_end
-                for item in parsed
-            ):
+            if any(item.open_time_ms < cursor or item.open_time_ms > final_end for item in parsed):
                 raise MarketDataError("Binance returned a candle outside the requested time range")
             if parsed:
                 result = self.repository.insert_batch(
