@@ -1,7 +1,7 @@
 """Typed domain records shared by decision, risk, and audit components."""
 
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from uuid import uuid4
 
@@ -38,7 +38,7 @@ class DecisionRecord:
     strategy_version: str
     symbol: str | None = None
     mode: SystemMode = SystemMode.RESEARCH_ONLY
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     decision_id: str = field(default_factory=lambda: uuid4().hex)
 
     def __post_init__(self) -> None:
