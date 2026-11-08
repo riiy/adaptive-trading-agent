@@ -33,13 +33,15 @@ The public repository must contain placeholders only. Store secrets in the deplo
 
 ## Current milestone
 
-**M0 — Verified decision and risk boundary**
+**M1 — Read-only market data foundation (in progress)**
 
-1. Define typed decision records.
-2. Implement a fail-closed risk/permission governor.
-3. Record and replay decision events.
-4. Add tests proving that research mode rejects all order intents.
-5. Establish CI before connecting exchange data or an LLM.
+M0 is implemented on the review branch. M1 adds read-only Binance Spot historical candles, strict validation, reproducible SQLite storage, and Ubuntu 24.04 service files.
+
+Initial collection scope:
+- Symbols: BTCUSDT and ETHUSDT.
+- Intervals: 15m, 1h, and 4h.
+- 1m is deferred until a concrete research or execution-model need exists.
+- Public market-data endpoints only; no API key is needed.
 
 ## Local setup
 
@@ -50,7 +52,19 @@ python -m pip install --upgrade pip
 python -m pip install -e ".[dev]"
 pytest
 ruff check .
+ruff format --check .
 ```
+
+## Market data quick start
+
+After installing the package, fetch the last 365 days of completed candles:
+
+```bash
+ata market sync --symbols BTCUSDT ETHUSDT --intervals 15m 1h 4h --lookback-days 365 --db data/ata.sqlite3
+ata market audit --symbol BTCUSDT --interval 1h --db data/ata.sqlite3
+```
+
+The collector uses Binance's unauthenticated market-data-only REST host, excludes unfinished candles, preserves decimal precision, and fails on conflicting historical candles. See [Ubuntu 24.04 deployment](deploy/ubuntu24/README.md).
 
 ## Project documents
 
