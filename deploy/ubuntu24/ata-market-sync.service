@@ -9,6 +9,7 @@ User=ata
 Group=ata
 WorkingDirectory=/opt/ata/app
 Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
 ExecStart=/opt/ata/venv/bin/ata market sync --symbols BTCUSDT ETHUSDT --intervals 15m 1h 4h --lookback-days 3 --overlap-bars 3 --db /var/lib/ata/market.sqlite3
 TimeoutStartSec=180
 UMask=0077
