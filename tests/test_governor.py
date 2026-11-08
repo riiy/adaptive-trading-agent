@@ -66,6 +66,24 @@ def test_drawdown_guardrail_blocks_new_order() -> None:
     assert result.code is AuthorizationCode.DRAWDOWN_LIMIT
 
 
+def test_drawdown_guardrail_does_not_block_risk_reducing_exit() -> None:
+    policy = RiskPolicy(
+        mode=SystemMode.PAPER,
+        account_simulation_allowed=True,
+    )
+    result = RiskGovernor(policy).authorize(
+        Action.EXIT,
+        "BTCUSDT",
+        healthy_context(
+            drawdown=Decimal("0.25"),
+            positions=("BTCUSDT",),
+        ),
+    )
+
+    assert result.allowed is False
+    assert result.code is AuthorizationCode.PAPER_EXECUTION_NOT_IMPLEMENTED
+
+
 def test_paper_authorization_requires_explicit_permission() -> None:
     policy = RiskPolicy(mode=SystemMode.PAPER)
     result = RiskGovernor(policy).authorize(
