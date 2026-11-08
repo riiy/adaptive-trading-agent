@@ -3,6 +3,7 @@
 import hashlib
 import json
 import sqlite3
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -56,7 +57,7 @@ class MarketDataRepository:
     def __init__(self, path: str | Path) -> None:
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        with self._connect() as connection:
+        with self._connection() as connection:
             connection.execute("PRAGMA journal_mode=WAL")
             connection.execute("PRAGMA synchronous=FULL")
             connection.executescript(
@@ -108,10 +109,19 @@ class MarketDataRepository:
         connection = sqlite3.connect(self.path, timeout=10.0)
         connection.execute("PRAGMA foreign_keys=ON")
         connection.execute("PRAGMA busy_timeout=10000")
+        connection.execute("PRAGMA synchronous=FULL")
         return connection
 
+    @contextmanager
+    def _connection(self):
+        connection = self._connect()
+        try:
+            yield connection
+        finally:
+            connection.close()
+
     def latest_open_time(self, symbol: str, interval: str) -> int | None:
-        with self._connect() as connection:
+        with self._connection() as connection:
             row = connection.execute(
                 """
                 SELECT MAX(open_time_ms)
@@ -249,7 +259,7 @@ class MarketDataRepository:
 
     def audit(self, symbol: str, interval: str) -> DataQualityReport:
         interval_ms = INTERVAL_MS[interval]
-        with self._connect() as connection:
+        with self._connection() as connection:
             rows = connection.execute(
                 """
                 SELECT open_time_ms
