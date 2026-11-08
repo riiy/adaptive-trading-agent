@@ -73,3 +73,14 @@ def test_parse_klines_rejects_unsupported_symbol() -> None:
         assert "unsupported symbol" in str(error)
     else:
         raise AssertionError("unsupported symbol must be rejected")
+
+def test_parse_klines_rejects_non_finite_prices() -> None:
+    row = raw_kline(0)
+    row[1] = "NaN"
+
+    try:
+        parse_klines([row], symbol="BTCUSDT", interval="1m", server_time_ms=60_000)
+    except MarketDataError as error:
+        assert "finite" in str(error)
+    else:
+        raise AssertionError("non-finite prices must be rejected")
