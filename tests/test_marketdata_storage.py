@@ -86,6 +86,7 @@ def test_candle_data_conflict_is_not_hidden_by_decimal_formatting(tmp_path) -> N
     with pytest.raises(DataConflictError):
         repository.insert_batch([changed], fetched_at_server_ms=120_000)
 
+
 def test_insert_batch_rejects_unclosed_candles(tmp_path) -> None:
     repository = MarketDataRepository(tmp_path / "market.sqlite3")
 
