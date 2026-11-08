@@ -65,8 +65,11 @@ class MarketDataCollector:
     ) -> SyncSummary:
         if lookback_days < 1 or overlap_bars < 0:
             raise ValueError("lookback_days/overlap_bars are invalid")
+        if symbol not in {"BTCUSDT", "ETHUSDT"} or interval not in INTERVAL_MS:
+            raise MarketDataError("unsupported symbol or interval")
         interval_ms = INTERVAL_MS[interval]
-        final_end = min(end_time_ms or server_time_ms - 1, server_time_ms - 1)
+        requested_end = server_time_ms - 1 if end_time_ms is None else end_time_ms
+        final_end = min(requested_end, server_time_ms - 1)
         latest = self.repository.latest_open_time(symbol, interval)
 
         if start_time_ms is not None:
