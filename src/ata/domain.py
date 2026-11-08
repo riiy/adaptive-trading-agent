@@ -42,6 +42,10 @@ class DecisionRecord:
     decision_id: str = field(default_factory=lambda: uuid4().hex)
 
     def __post_init__(self) -> None:
+        if not isinstance(self.action, Action):
+            raise ValueError("action must be an Action enum value")
+        if not isinstance(self.mode, SystemMode):
+            raise ValueError("mode must be a SystemMode enum value")
         if self.created_at.tzinfo is None or self.created_at.utcoffset() != timedelta(0):
             raise ValueError("created_at must be timezone-aware UTC")
         for name in ("reason_code", "rationale", "snapshot_id", "strategy_version", "decision_id"):
