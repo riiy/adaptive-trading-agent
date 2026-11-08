@@ -12,7 +12,6 @@ from ata.domain import Action
 from ata.marketdata.binance import BinanceAPIError, BinancePublicClient
 from ata.marketdata.collector import MarketDataCollector
 from ata.marketdata.models import (
-    INTERVAL_MS,
     SUPPORTED_INTERVALS,
     SUPPORTED_SYMBOLS,
     MarketDataError,
