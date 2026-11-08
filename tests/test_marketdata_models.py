@@ -74,6 +74,7 @@ def test_parse_klines_rejects_unsupported_symbol() -> None:
     else:
         raise AssertionError("unsupported symbol must be rejected")
 
+
 def test_parse_klines_rejects_non_finite_prices() -> None:
     row = raw_kline(0)
     row[1] = "NaN"
