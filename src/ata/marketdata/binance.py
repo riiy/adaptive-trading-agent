@@ -95,7 +95,9 @@ class BinancePublicClient:
         for attempt in range(self.max_retries + 1):
             try:
                 with self._opener(request, timeout=self.timeout_seconds) as response:
-                    status = getattr(response, "status", response.getcode())
+                    status = getattr(response, "status", None)
+                    if status is None:
+                        status = response.getcode()
                     body = response.read()
                 if status != 200:
                     raise BinanceAPIError(f"unexpected Binance HTTP status: {status}")
