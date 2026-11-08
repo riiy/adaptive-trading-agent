@@ -33,5 +33,14 @@ jobs:
       - name: Check formatting
         run: ruff format --check .
 
+      - name: Validate Ubuntu installer syntax
+        run: bash -n deploy/ubuntu24/install.sh
+
+      - name: Verify CLI entry points
+        run: |
+          ata status
+          ata market sync --help
+          ata market audit --help
+
       - name: Run tests
         run: pytest -q
