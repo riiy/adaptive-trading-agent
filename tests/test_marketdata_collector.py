@@ -78,3 +78,23 @@ def test_incremental_sync_overlaps_recent_bars_and_is_idempotent(tmp_path) -> No
     assert second.rows_inserted == 0
     assert second.start_time_ms == 0
     assert repository.latest_open_time("BTCUSDT", "1m") == 120_000
+
+def test_sync_rejects_rows_outside_requested_range(tmp_path) -> None:
+    class OutOfRangeClient:
+        def get_klines(self, **_kwargs):
+            return [raw_kline(0)]
+
+    repository = MarketDataRepository(tmp_path / "market.sqlite3")
+    collector = MarketDataCollector(OutOfRangeClient(), repository)
+
+    try:
+        collector.sync(
+            symbol="BTCUSDT",
+            interval="1m",
+            server_time_ms=60_000,
+            start_time_ms=60_000,
+        )
+    except ValueError as error:
+        assert "outside the requested time range" in str(error)
+    else:
+        raise AssertionError("out-of-range candle must be rejected")
