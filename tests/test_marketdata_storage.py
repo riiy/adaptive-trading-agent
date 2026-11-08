@@ -43,17 +43,21 @@ def test_insert_batch_is_idempotent_and_records_provenance(tmp_path) -> None:
 
 def test_conflicting_existing_candle_rolls_back_batch(tmp_path) -> None:
     repository = MarketDataRepository(tmp_path / "market.sqlite3")
-    repository.insert_batch([candle(0)], fetched_at_server_ms=60_000)
+    repository.insert_batch(
+        [candle(0), candle(120_000)],
+        fetched_at_server_ms=180_000,
+    )
 
     with pytest.raises(DataConflictError, match="stored candle changed"):
         repository.insert_batch(
-            [candle(60_000), candle(0, close="100.5")],
-            fetched_at_server_ms=120_000,
+            [candle(60_000), candle(120_000, close="100.5")],
+            fetched_at_server_ms=180_000,
         )
 
     report = repository.audit("BTCUSDT", "1m")
-    assert report.rows == 1
-    assert report.last_open_time_ms == 0
+    assert report.rows == 2
+    assert report.last_open_time_ms == 120_000
+    assert report.missing_intervals == 1
 
 
 def test_audit_reports_missing_intervals_without_fabricating_rows(tmp_path) -> None:
@@ -81,3 +85,19 @@ def test_candle_data_conflict_is_not_hidden_by_decimal_formatting(tmp_path) -> N
     changed = replace(candle(0), close=Decimal("100.9"))
     with pytest.raises(DataConflictError):
         repository.insert_batch([changed], fetched_at_server_ms=120_000)
+
+def test_insert_batch_rejects_unclosed_candles(tmp_path) -> None:
+    repository = MarketDataRepository(tmp_path / "market.sqlite3")
+
+    with pytest.raises(ValueError, match="only candles closed"):
+        repository.insert_batch([candle(0)], fetched_at_server_ms=59_999)
+
+
+def test_insert_batch_rejects_unordered_rows(tmp_path) -> None:
+    repository = MarketDataRepository(tmp_path / "market.sqlite3")
+
+    with pytest.raises(ValueError, match="strictly chronological"):
+        repository.insert_batch(
+            [candle(60_000), candle(0)],
+            fetched_at_server_ms=180_000,
+        )
