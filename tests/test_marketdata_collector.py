@@ -91,7 +91,7 @@ def test_sync_rejects_rows_outside_requested_range(tmp_path) -> None:
         collector.sync(
             symbol="BTCUSDT",
             interval="1m",
-            server_time_ms=60_000,
+            server_time_ms=120_000,
             start_time_ms=60_000,
         )
     except ValueError as error:
