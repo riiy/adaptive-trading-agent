@@ -60,7 +60,9 @@ Implemented on branch `feat/m1-market-data`; PR #2 is a stacked draft targeting 
 - SQLite WAL storage with exact decimal text, transactional writes, immutable candle keys, conflict detection, and SHA-256 batch provenance.
 - CLI commands for market sync and data-quality audit.
 - Ubuntu 24.04 systemd service/timer and installation script.
-- Automated tests have been added; M1 CI validation is pending.
+- M1 GitHub Actions CI passed: Ruff lint, Ruff format, and 41 pytest tests.
+- PR #2 is open and Ready for review, stacked on the M0 branch.
+- The Ubuntu server has not yet been deployed or smoke-tested; CI does not substitute for that operational check.
 
 M1 acceptance requires:
 1. Ruff and all automated tests pass.
@@ -87,7 +89,7 @@ These are unvalidated hypotheses, not trading signals. Each requires preregistra
 
 ## 8. Next actions
 
-1. Complete M1 CI and review PR #2.
+1. Review PR #1 and PR #2; PR #2 depends on PR #1.
 2. Merge PR #1 first, then retarget/rebase PR #2 onto main.
 3. After both PRs are merged, deploy to Ubuntu 24.04 using `deploy/ubuntu24/install.sh`.
 4. Run a one-year historical backfill for 15m, 1h, and 4h BTCUSDT/ETHUSDT.
