@@ -58,8 +58,29 @@ class Kline:
             raise MarketDataError(f"unsupported symbol: {self.symbol}")
         if self.interval not in SUPPORTED_INTERVALS:
             raise MarketDataError(f"unsupported interval: {self.interval}")
-        if self.open_time_ms < 0 or self.close_time_ms <= self.open_time_ms:
+        if (
+            isinstance(self.open_time_ms, bool)
+            or not isinstance(self.open_time_ms, int)
+            or isinstance(self.close_time_ms, bool)
+            or not isinstance(self.close_time_ms, int)
+            or self.open_time_ms < 0
+            or self.close_time_ms <= self.open_time_ms
+        ):
             raise MarketDataError("kline timestamps are invalid")
+        decimal_fields = (
+            self.open,
+            self.high,
+            self.low,
+            self.close,
+            self.volume,
+            self.quote_asset_volume,
+            self.taker_buy_base_asset_volume,
+            self.taker_buy_quote_asset_volume,
+        )
+        if any(not isinstance(value, Decimal) or not value.is_finite() for value in decimal_fields):
+            raise MarketDataError("all price and volume fields must be finite decimals")
+        if isinstance(self.number_of_trades, bool) or not isinstance(self.number_of_trades, int):
+            raise MarketDataError("number_of_trades must be an integer")
         if self.open_time_ms % INTERVAL_MS[self.interval] != 0:
             raise MarketDataError("kline open time is not aligned to its UTC interval")
         if self.close_time_ms != self.open_time_ms + INTERVAL_MS[self.interval] - 1:
