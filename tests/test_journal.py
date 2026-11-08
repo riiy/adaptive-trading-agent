@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -13,7 +13,7 @@ def make_record(snapshot_id: str = "snapshot-001") -> DecisionRecord:
         rationale="No validated strategy is currently authorized.",
         snapshot_id=snapshot_id,
         strategy_version="research-baseline-0",
-        created_at=datetime(2026, 11, 8, 12, 0, tzinfo=timezone.utc),
+        created_at=datetime(2026, 11, 8, 12, 0, tzinfo=UTC),
     )
 
 
