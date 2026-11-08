@@ -9,8 +9,6 @@ from ata.domain import Action, ORDER_ACTIONS, SystemMode
 
 class AuthorizationCode(StrEnum):
     NON_ORDER_ACTION = "NON_ORDER_ACTION"
-    AUTHORIZED_PAPER = "AUTHORIZED_PAPER"
-    AUTHORIZED_LIVE_PERMISSION = "AUTHORIZED_LIVE_PERMISSION"
     UNSUPPORTED_SYMBOL = "UNSUPPORTED_SYMBOL"
     ACTION_SYMBOL_MISMATCH = "ACTION_SYMBOL_MISMATCH"
     DATA_UNHEALTHY = "DATA_UNHEALTHY"
@@ -21,6 +19,9 @@ class AuthorizationCode(StrEnum):
     ACCOUNT_SIMULATION_DISABLED = "ACCOUNT_SIMULATION_DISABLED"
     TRADING_DISABLED = "TRADING_DISABLED"
     TICKET_GENERATION_DISABLED = "TICKET_GENERATION_DISABLED"
+    INVALID_ACTION = "INVALID_ACTION"
+    PAPER_EXECUTION_NOT_IMPLEMENTED = "PAPER_EXECUTION_NOT_IMPLEMENTED"
+    LIVE_EXECUTION_NOT_IMPLEMENTED = "LIVE_EXECUTION_NOT_IMPLEMENTED"
 
 
 @dataclass(frozen=True, slots=True)
@@ -89,6 +90,12 @@ class RiskGovernor:
     ) -> RiskDecision:
         context = context or RiskContext()
 
+        if not isinstance(action, Action):
+            return self._deny(
+                AuthorizationCode.INVALID_ACTION,
+                "Action must be a recognized Action enum value.",
+            )
+
         if action not in ORDER_ACTIONS:
             return RiskDecision(
                 allowed=True,
@@ -142,10 +149,9 @@ class RiskGovernor:
                     AuthorizationCode.ACCOUNT_SIMULATION_DISABLED,
                     "Paper account simulation has not been explicitly enabled.",
                 )
-            return RiskDecision(
-                allowed=True,
-                code=AuthorizationCode.AUTHORIZED_PAPER,
-                reason="Authorized for paper simulation only; no exchange order is submitted.",
+            return self._deny(
+                AuthorizationCode.PAPER_EXECUTION_NOT_IMPLEMENTED,
+                "Paper broker is not implemented; order-like actions remain blocked.",
             )
 
         if not self.policy.trading_allowed:
@@ -158,10 +164,9 @@ class RiskGovernor:
                 AuthorizationCode.TICKET_GENERATION_DISABLED,
                 "Order-ticket generation permission is disabled.",
             )
-        return RiskDecision(
-            allowed=True,
-            code=AuthorizationCode.AUTHORIZED_LIVE_PERMISSION,
-            reason="Policy permissions passed; this authorization does not submit an order.",
+        return self._deny(
+            AuthorizationCode.LIVE_EXECUTION_NOT_IMPLEMENTED,
+            "Live execution adapter is not implemented; live order actions remain blocked.",
         )
 
     @staticmethod
