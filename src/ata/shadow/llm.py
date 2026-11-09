@@ -13,6 +13,7 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from ata.shadow.models import ShadowForecast, canonical_json
 
+
 class _RejectRedirects(HTTPRedirectHandler):
     """Do not forward a provider bearer token to a redirect target."""
 
