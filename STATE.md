@@ -1,7 +1,7 @@
 # Adaptive Trading Agent — STATE.md
 
 **Last updated:** 2026-11-09  
-**Project phase:** M3_SIGNAL_HYPOTHESIS  
+**Project phase:** RESEARCH_IDLE_NO_VALIDATED_SETUP  
 **System mode:** RESEARCH_ONLY  
 **Live trading:** Prohibited
 
@@ -28,7 +28,7 @@ Build a reproducible, risk-governed decision system that can determine whether a
 ## 3. Permission state
 
 ```yaml
-project_phase: M3_SIGNAL_HYPOTHESIS
+project_phase: RESEARCH_IDLE_NO_VALIDATED_SETUP
 system_mode: RESEARCH_ONLY
 trading_allowed: false
 account_simulation_allowed: false
@@ -89,7 +89,7 @@ M2 scope:
 - 24h momentum BTC -1.791035%, ETH -4.760456%; 7d momentum BTC -4.983123%, ETH -7.125438%; 7d historic annualized volatility BTC 41.143348%, ETH 60.260047%.
 - M2 status: **M2_ACCEPTED**, descriptive baselines only, no evidence of alpha.
 
-## 7. Current milestone — M3-H001 preregistered signal kill test
+## 7. Completed milestone — M3-H001 preregistered signal kill test (archived)
 
 - Mechanism: delayed information diffusion might cause positive prior 7-day momentum to predict the next 24h gross return.
 - Frozen timestamp: 2026-11-09T06:46:19.012Z (same as M2 operator snapshot); 365-day maximum historical scope.
@@ -98,17 +98,26 @@ M2 scope:
 - Weekly block bootstrap, deterministic seed, comparison versus cash, BTC and ETH unconditionally on identical daily observations.
 - Historical test is not genuinely blind because M2 aggregate metrics have been observed; prospective evidence required after 2026-11-10 UTC.
 - No execution/fill simulation, account allocation, order API, trading tickets or LLM agent in M3-H001.
-- PR #6 covers the M3-H001 diagnostic. GitHub CI passed: Ruff lint/format, CLI, Ubuntu installer checks, and **68 pytest tests**. The real Ubuntu historical diagnostic has not yet been run. If preregistered evidence fails, archive H001 without adjusting parameters.
+- PR #6 merged to main; CI completed successfully with **68 pytest tests**.
+- **2026-11-09 Ubuntu result:** `predeclared_decision=STOP_NO_SUFFICIENT_EVIDENCE`. H001 is **ARCHIVED_NON_TRADABLE**; lifecycle closed, no parameter rescue and no account simulation.
+- Development: 214 observations, candidate mean forward 24h gross return -0.106114%; excess to USDT -0.106114%, BTC +0.051010%, ETH +0.112646%.
+- Validation: 71 observations, candidate mean forward 24h gross return +0.329557%; excess to USDT +0.329557%, BTC +0.011455%, ETH **-0.216317%**.
+- Validation bootstrap 95% lower bounds for daily mean excess: USDT -0.231528%, BTC -0.249006%, ETH -0.560181%; **all fail the strictly-positive predeclared lower-bound test**.
+- Reserved historical-test sample: 72 days, **SEALED**; do not open after failure.
+- Diagnostic labels are close-to-close gross forward returns, not executable trade returns. No claim that all possible trend mechanisms are invalidated; **this particular rule failed its frozen evidence gate**.
 
 ## 8. Research status
 
-No ATA strategy is active or authorized.
+- `current_setup: null`
+- `tradable_setups: 0`
+- `trading_allowed: false`
+- `account_simulation_allowed: false`
+- `ticket_generation_allowed: false`
+- `M3-H001: ARCHIVED_NON_TRADABLE / FAILED_PREDECLARED_GATE`
 
-Potential future hypotheses:
-- Trend / momentum continuation.
-- Volatility expansion followed by trend confirmation.
+No active ATA strategy or approved simulation. **Do not relabel or retune H001** as a new strategy.
 
-These are unvalidated hypotheses, not trading signals. Each requires preregistration, baselines, time-ordered out-of-sample tests, cost stress, robustness analysis, and explicit stop criteria.
+An economically distinct mechanism (e.g. volatility-expansion confirmation) may be considered as a *new, separately pre-registered* research candidate only if its marginal information value justifies the time/cost. It is not automatically authorized by H001's failure.
 
 ## 9. Legacy research tracks — unchanged
 
@@ -118,11 +127,10 @@ These are unvalidated hypotheses, not trading signals. Each requires preregistra
 
 ## 10. Next actions
 
-1. Review M3-H001 PR and CI test result.
-2. After merging, update the Ubuntu app and run `ata research m3-h001 --db /var/lib/ata/market.sqlite3` once, recording the development and validation report.
-3. Apply the preregistered kill criteria. If `STOP_NO_SUFFICIENT_EVIDENCE`, archive M3-H001. Do not retune it.
-4. If `REVIEW_BEFORE_HISTORICAL_TEST`, separately evaluate holdout-release approval and genuine prospective signal evaluation, then model real execution costs before paper permissions.
-5. Preserve `trading_allowed=false`, `account_simulation_allowed=false`, `ticket_generation_allowed=false`.
+1. Archive H001 and preserve its sealed holdout; do not rerun parameter sweeps, adjust thresholds, or model H001 fills/account equity.
+2. Continue low-cost market-data collection and health monitoring; no additional data engineering beyond decision-relevant defects.
+3. Only if justified, register one **economically distinct** low-cost hypothesis with fixed tests, cost ceiling, and kill criteria. The next research direction is **not yet selected or active**.
+4. Preserve `trading_allowed=false`, `account_simulation_allowed=false`, `ticket_generation_allowed=false`.
 
 ## 11. Stop conditions
 
