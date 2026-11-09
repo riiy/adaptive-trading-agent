@@ -1,4 +1,4 @@
-# ATA architecture — M2
+# ATA architecture — M3
 
 ## Objective
 
@@ -14,6 +14,8 @@ Build a reproducible decision loop with an independent permission boundary. The 
 - Storage: SQLite WAL, exact decimal text columns, immutable candle primary keys, batch hashes, and ingestion provenance.
 - Operations: Ubuntu 24.04 systemd service/timer and least-privilege data directory.
 - M2 research: read-only aligned 1h feature snapshot and USDT/BTC/ETH passive benchmarks.
+- M3 mechanism screen: frozen daily momentum signal labels, chronological split,
+  week-block uncertainty estimates and sealed historical test data.
 - CI: automated lint, format, and unit-test checks.
 
 ## Planned components, not yet implemented
