@@ -217,11 +217,7 @@ def settle_pending(
             selected = (
                 None
                 if choice is ShadowChoice.ABSTAIN
-                else (
-                    "0"
-                    if choice is ShadowChoice.USDT
-                    else results[choice.value]
-                )
+                else ("0" if choice is ShadowChoice.USDT else results[choice.value])
             )
             store.append_feedback(
                 day_ms=item.day_ms,
