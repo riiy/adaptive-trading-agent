@@ -1,0 +1,11 @@
+[Unit]
+Description=Run ATA market-data synchronization every five minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+AccuracySec=30s
+Unit=ata-market-sync.service
+
+[Install]
+WantedBy=timers.target
