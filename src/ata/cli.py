@@ -7,6 +7,7 @@ import sqlite3
 import sys
 import time
 from datetime import UTC, datetime
+from decimal import Decimal
 from pathlib import Path
 
 from ata.domain import Action
@@ -19,6 +20,7 @@ from ata.marketdata.models import (
 )
 from ata.marketdata.readiness import verify_m1
 from ata.marketdata.storage import MarketDataRepository
+from ata.research.baselines import research_snapshot
 from ata.risk import RiskContext, RiskGovernor, RiskPolicy
 
 
@@ -94,6 +96,21 @@ def build_parser() -> argparse.ArgumentParser:
     verify.add_argument("--min-history-days", type=int, default=350)
     verify.add_argument("--max-lag-bars", type=int, default=2)
 
+    research = commands.add_parser("research", help="read-only research tools")
+    research_commands = research.add_subparsers(dest="research_command", required=True)
+    snapshot = research_commands.add_parser(
+        "snapshot", help="causal market features and passive benchmarks"
+    )
+    snapshot.add_argument(
+        "--db",
+        type=_database_argument,
+        default=Path(os.environ.get("ATA_DB_PATH", "data/ata.sqlite3")),
+    )
+    snapshot.add_argument("--days", type=int, default=180)
+    snapshot.add_argument("--asof", type=_utc_milliseconds)
+    snapshot.add_argument("--fee-bps", type=Decimal, default=Decimal("10"))
+    snapshot.add_argument("--slippage-bps", type=Decimal, default=Decimal("5"))
+
     return parser
 
 
@@ -160,6 +177,22 @@ def _verify(args: argparse.Namespace) -> int:
     return 0 if report.passed else 1
 
 
+def _research_snapshot(args: argparse.Namespace) -> int:
+    now_ms = time.time_ns() // 1_000_000
+    if args.asof is not None and args.asof > now_ms:
+        raise ValueError("--asof cannot be in the future")
+    report = research_snapshot(
+        args.db,
+        asof_time_ms=now_ms if args.asof is None else args.asof,
+        benchmark_days=args.days,
+        fee_bps_per_side=args.fee_bps,
+        slippage_bps_per_side=args.slippage_bps,
+        max_lag_bars=2 if args.asof is None else None,
+    )
+    print(json.dumps(report.to_dict(), indent=2, sort_keys=True))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     arguments = sys.argv[1:] if argv is None else argv
     if not arguments:
@@ -174,6 +207,8 @@ def main(argv: list[str] | None = None) -> int:
             return _audit(args)
         if args.command == "market" and args.market_command == "verify":
             return _verify(args)
+        if args.command == "research" and args.research_command == "snapshot":
+            return _research_snapshot(args)
         return _status()
     except (BinanceAPIError, MarketDataError, OSError, sqlite3.Error, ValueError) as error:
         print(f"ata: error: {error}", file=sys.stderr)
