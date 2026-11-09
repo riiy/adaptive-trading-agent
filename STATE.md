@@ -130,7 +130,9 @@ An economically distinct mechanism (e.g. volatility-expansion confirmation) may 
 - Baseline: unconditional USDT selection plus 0.5 fixed direction probabilities; LLM is optional and must be explicitly enabled using server-side HTTPS credentials.
 - Evaluation: positive 24h return Brier scores, gross close-to-close choice outcomes and contemporaneous BTC/ETH/USDT baselines, abstentions separately counted.
 - **No executable entries, transaction cost model, real/Paper orders, parameter tuning or automatic strategy promotion.**
-- PR #8 implements the first M4 prospective shadow research loop. **GitHub CI passed 85 pytest tests**, Ruff lint/format, Ubuntu install-script syntax, and shadow CLI checks. **PR still requires review/merge and real Ubuntu prospective operation**. Reaching 60 days of data warrants review, not promotion.
+- PR #8 is **merged to main** (2026-11-09). GitHub CI passed 85 pytest tests, Ruff lint/format, Ubuntu install-script syntax, and shadow CLI checks.
+- Operator reports `/etc/ata/shadow.env` has been configured. The `ata shadow score` command ran successfully against `/var/lib/ata/shadow.sqlite3`, but reports 0 settled observations for both baseline and LLM. This is expected before the first allowed prospective forecast; it does **not** verify that systemd loaded the LLM environment or that a forecast has run.
+- First permissible observation: 2026-11-10 00:00 UTC; scheduled service at 00:15 UTC (08:15 UTC+8). Operational acceptance remains pending: timer activation, first baseline+LLM forecast, then delayed next-day feedback. Reaching 60 days warrants review, not promotion.
 
 The approved engineering experiment starts with one research model. Stop or disable daily LLM usage if it does not demonstrate decision-relevant value after sufficient prospective evidence; preserve a low-cost deterministic pipeline.
 
@@ -142,10 +144,10 @@ The approved engineering experiment starts with one research model. Stop or disa
 
 ## 11. Next actions
 
-1. Review M4 PR CI and the prospective protocol in `docs/m4-shadow.md`.
-2. After merging, install the new systemd units on Ubuntu. Do not automatically activate LLM calls; explicitly opt in after checking provider compatibility and monthly token budget.
-3. Record the first genuine forecast on/after 2026-11-10 00:15 UTC, verify the frozen snapshot hash and timestamp, then settle once the 24h outcome is available.
-4. Compare LLM probability calibration and selection quality with the registered static baseline after sufficient prospective observations; disable low-value calls instead of adding agents.
+1. Verify `ata-shadow-observe.timer` and `ata-shadow-settle.timer` are enabled and scheduled; inspect service unit's `EnvironmentFile` reference to `/etc/ata/shadow.env`.
+2. On 2026-11-10 00:15 UTC (08:15 UTC+8), verify the first genuine prospective observation records both deterministic baseline and opted-in LLM. Confirm snapshot hash, timestamp, model/prompt version, and sanitized provider result.
+3. On/after 2026-11-11 01:05 UTC (09:05 UTC+8), verify 24h feedback settlement, then run `ata shadow score`.
+4. Compare LLM calibration and selection quality with the registered static baseline after sufficient prospective observations; disable low-value calls instead of adding agents.
 5. Preserve H001's sealed holdout and all three permissions: trading=false, account_simulation=false, ticket_generation=false.
 
 ## 12. Stop conditions
