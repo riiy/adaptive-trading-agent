@@ -299,3 +299,31 @@ def test_repeated_feedback_is_write_once(fixture_db) -> None:
     settle_pending(market_db, shadow_db, now_ms=DAY + DAY_MS + 10 * 60_000)
     with sqlite3.connect(shadow_db) as conn:
         assert conn.execute("SELECT COUNT(*) FROM shadow_feedback").fetchone()[0] == 1
+
+
+def test_missing_hourly_bar_in_label_horizon_prevents_feedback(fixture_db) -> None:
+    market_db, shadow_db = fixture_db
+    observe_once(market_db, shadow_db, now_ms=DAY + 15 * 60_000)
+    with sqlite3.connect(market_db) as connection:
+        connection.execute(
+            "DELETE FROM klines WHERE symbol='BTCUSDT' AND interval='1h' "
+            "AND open_time_ms=?",
+            (DAY + 12 * HOUR_MS,),
+        )
+
+    result = settle_pending(market_db, shadow_db, now_ms=DAY + DAY_MS + 60_000)
+    assert result["newly_settled"] == 0
+    assert result["still_pending"] == 1
+    assert ShadowStore(shadow_db).settled() == []
+
+
+def test_snapshot_integrity_is_checked_before_scoring(fixture_db) -> None:
+    market_db, shadow_db = fixture_db
+    observe_once(market_db, shadow_db, now_ms=DAY + 15 * 60_000)
+    with sqlite3.connect(shadow_db) as connection:
+        connection.execute(
+            "UPDATE shadow_forecasts SET snapshot_json='{}' WHERE source='baseline'"
+        )
+
+    with pytest.raises(ValueError, match="SHADOW_SNAPSHOT_HASH_MISMATCH"):
+        settle_pending(market_db, shadow_db, now_ms=DAY + DAY_MS + 60_000)
