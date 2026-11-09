@@ -53,8 +53,7 @@ def fixture_db(tmp_path):
             _candle(
                 symbol,
                 start + i * HOUR_MS,
-                Decimal("100") + (Decimal(i) / 20 if symbol == "BTCUSDT" else
-                                  -Decimal(i) / 25),
+                Decimal("100") + (Decimal(i) / 20 if symbol == "BTCUSDT" else -Decimal(i) / 25),
             )
             for i in range(9 * 24 + 1)
         ]
@@ -71,20 +70,26 @@ def _test_settings() -> LLMSettings:
 
 
 def _fake_llm(_snapshot, _settings) -> ShadowForecast:
-    return ShadowForecast.from_payload({
-        "choice": "BTCUSDT",
-        "p_btc_up": "0.8",
-        "p_eth_up": "0.2",
-        "reason_code": "MOCK_FORECAST",
-        "hypothesis": "Test-only forecast; never a trading signal.",
-    })
+    return ShadowForecast.from_payload(
+        {
+            "choice": "BTCUSDT",
+            "p_btc_up": "0.8",
+            "p_eth_up": "0.2",
+            "reason_code": "MOCK_FORECAST",
+            "hypothesis": "Test-only forecast; never a trading signal.",
+        }
+    )
 
 
 def test_prospective_observe_once_writes_frozen_baseline_and_llm(fixture_db) -> None:
     market_db, shadow_db = fixture_db
     observed = observe_once(
-        market_db, shadow_db, now_ms=DAY + 15 * 60_000,
-        enable_llm=True, settings=_test_settings(), forecaster=_fake_llm,
+        market_db,
+        shadow_db,
+        now_ms=DAY + 15 * 60_000,
+        enable_llm=True,
+        settings=_test_settings(),
+        forecaster=_fake_llm,
     )
     assert observed["sources_recorded"] == ["baseline", "llm"]
     assert observed["execution_allowed"] is False
@@ -105,10 +110,22 @@ def test_duplicate_run_does_not_call_llm_twice(fixture_db) -> None:
         counter.append(1)
         return _fake_llm(snapshot, settings)
 
-    first = observe_once(market_db, shadow_db, now_ms=DAY+ 15*60_000,
-                         enable_llm=True, settings=_test_settings(), forecaster=counted)
-    second = observe_once(market_db, shadow_db, now_ms=DAY+ 16*60_000,
-                          enable_llm=True, settings=_test_settings(), forecaster=counted)
+    first = observe_once(
+        market_db,
+        shadow_db,
+        now_ms=DAY + 15 * 60_000,
+        enable_llm=True,
+        settings=_test_settings(),
+        forecaster=counted,
+    )
+    second = observe_once(
+        market_db,
+        shadow_db,
+        now_ms=DAY + 16 * 60_000,
+        enable_llm=True,
+        settings=_test_settings(),
+        forecaster=counted,
+    )
     assert first["status"] == "RECORDED"
     assert second["status"] == "ALREADY_RECORDED"
     assert counter == [1]
@@ -125,33 +142,40 @@ def test_no_backdated_predictions(fixture_db) -> None:
     market_db, shadow_db = fixture_db
     with pytest.raises(ValueError, match="begins on 2026-11-10"):
         observe_once(
-            market_db, shadow_db,
-            now_ms=FIRST_PROSPECTIVE_DAY_MS-DAY_MS+15*60_000,
+            market_db,
+            shadow_db,
+            now_ms=FIRST_PROSPECTIVE_DAY_MS - DAY_MS + 15 * 60_000,
         )
 
 
 def test_settle_only_after_horizon_and_preserves_abstention(fixture_db) -> None:
     market_db, shadow_db = fixture_db
     observe_once(
-        market_db, shadow_db, now_ms=DAY+15*60_000,
-        enable_llm=True, settings=_test_settings(),
-        forecaster=lambda _snapshot, _settings: ShadowForecast.from_payload({
-            "choice": "ABSTAIN",
-            "p_btc_up": "0.5",
-            "p_eth_up": "0.5",
-            "reason_code": "WEAK_EVIDENCE",
-            "hypothesis": "No calibrated advantage detected.",
-        }),
+        market_db,
+        shadow_db,
+        now_ms=DAY + 15 * 60_000,
+        enable_llm=True,
+        settings=_test_settings(),
+        forecaster=lambda _snapshot, _settings: ShadowForecast.from_payload(
+            {
+                "choice": "ABSTAIN",
+                "p_btc_up": "0.5",
+                "p_eth_up": "0.5",
+                "reason_code": "WEAK_EVIDENCE",
+                "hypothesis": "No calibrated advantage detected.",
+            }
+        ),
     )
-    early = settle_pending(market_db, shadow_db, now_ms=DAY+23*HOUR_MS)
+    early = settle_pending(market_db, shadow_db, now_ms=DAY + 23 * HOUR_MS)
     assert early["newly_settled"] == 0
     assert early["still_pending"] == 2
 
-    final = settle_pending(market_db, shadow_db, now_ms=DAY+DAY_MS+10*60_000)
+    final = settle_pending(market_db, shadow_db, now_ms=DAY + DAY_MS + 10 * 60_000)
     assert final["newly_settled"] == 2
-    assert settle_pending(market_db, shadow_db, now_ms=DAY+DAY_MS+11*60_000)[
-        "newly_settled"
-    ] == 0
+    assert (
+        settle_pending(market_db, shadow_db, now_ms=DAY + DAY_MS + 11 * 60_000)["newly_settled"]
+        == 0
+    )
 
     rows = ShadowStore(shadow_db).settled()
     assert len(rows) == 2
@@ -162,9 +186,15 @@ def test_settle_only_after_horizon_and_preserves_abstention(fixture_db) -> None:
 
 def test_scoring_reports_gross_benchmarks_and_probability_calibration(fixture_db) -> None:
     market_db, shadow_db = fixture_db
-    observe_once(market_db, shadow_db, now_ms=DAY+15*60_000,
-                 enable_llm=True,settings=_test_settings(),forecaster=_fake_llm)
-    settle_pending(market_db, shadow_db, now_ms=DAY+DAY_MS+10*60_000)
+    observe_once(
+        market_db,
+        shadow_db,
+        now_ms=DAY + 15 * 60_000,
+        enable_llm=True,
+        settings=_test_settings(),
+        forecaster=_fake_llm,
+    )
+    settle_pending(market_db, shadow_db, now_ms=DAY + DAY_MS + 10 * 60_000)
     report = shadow_score(shadow_db)
     assert report["trading_allowed"] is False
     assert report["account_simulation_allowed"] is False
@@ -183,8 +213,12 @@ def test_llm_failure_retains_baseline_without_faking_forecast(fixture_db) -> Non
 
     with pytest.raises(ValueError, match="provider failed"):
         observe_once(
-            market_db, shadow_db, now_ms=DAY+15*60_000,
-            enable_llm=True, settings=_test_settings(), forecaster=broken,
+            market_db,
+            shadow_db,
+            now_ms=DAY + 15 * 60_000,
+            enable_llm=True,
+            settings=_test_settings(),
+            forecaster=broken,
         )
     pending = ShadowStore(shadow_db).pending()
     assert len(pending) == 1
@@ -220,15 +254,25 @@ def test_llm_adapter_validates_response_without_network_access() -> None:
 
         def read(self, max_bytes):
             assert max_bytes == 32769
-            return json.dumps({
-                "choices": [
-                    {"message": {"content": json.dumps({
-                        "choice": "ABSTAIN", "p_btc_up": 0.5,
-                        "p_eth_up": 0.5, "reason_code": "TEST",
-                        "hypothesis": "This is not an order."
-                    })}}
-                ]
-            }).encode()
+            return json.dumps(
+                {
+                    "choices": [
+                        {
+                            "message": {
+                                "content": json.dumps(
+                                    {
+                                        "choice": "ABSTAIN",
+                                        "p_btc_up": 0.5,
+                                        "p_eth_up": 0.5,
+                                        "reason_code": "TEST",
+                                        "hypothesis": "This is not an order.",
+                                    }
+                                )
+                            }
+                        }
+                    ]
+                }
+            ).encode()
 
     def opener(request, timeout):
         assert timeout == 20
@@ -237,15 +281,16 @@ def test_llm_adapter_validates_response_without_network_access() -> None:
         return MockResponse()
 
     forecast = forecast_with_llm(
-        {"features": []}, _test_settings(), opener=opener,
+        {"features": []},
+        _test_settings(),
+        opener=opener,
     )
     assert forecast.choice.value == "ABSTAIN"
 
 
 def test_llm_settings_require_https() -> None:
     with pytest.raises(ValueError, match="HTTPS"):
-        LLMSettings(url="http://127.0.0.1/v1/chat/completions",
-                    model="x", api_key="secret")
+        LLMSettings(url="http://127.0.0.1/v1/chat/completions", model="x", api_key="secret")
 
 
 def test_repeated_feedback_is_write_once(fixture_db) -> None:
