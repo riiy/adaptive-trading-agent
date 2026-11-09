@@ -60,9 +60,9 @@ def shadow_score(shadow_db: str | Path) -> dict[str, object]:
                 else None
             ),
             "median_choice_gross_forward_24h_pct": (
-                _percent(Decimal(str(statistics.median(
-                    [Decimal(r["selected_return"]) for r in active]
-                ))))
+                _percent(
+                    Decimal(str(statistics.median([Decimal(r["selected_return"]) for r in active])))
+                )
                 if active
                 else None
             ),
@@ -72,18 +72,20 @@ def shadow_score(shadow_db: str | Path) -> dict[str, object]:
                 else None
             ),
             "mean_choice_excess_vs_btc_pct": (
-                _percent(_average([
-                    Decimal(r["selected_return"]) - Decimal(r["btc_return"])
-                    for r in active
-                ]))
+                _percent(
+                    _average(
+                        [Decimal(r["selected_return"]) - Decimal(r["btc_return"]) for r in active]
+                    )
+                )
                 if active
                 else None
             ),
             "mean_choice_excess_vs_eth_pct": (
-                _percent(_average([
-                    Decimal(r["selected_return"]) - Decimal(r["eth_return"])
-                    for r in active
-                ]))
+                _percent(
+                    _average(
+                        [Decimal(r["selected_return"]) - Decimal(r["eth_return"]) for r in active]
+                    )
+                )
                 if active
                 else None
             ),
