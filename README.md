@@ -33,9 +33,9 @@ The public repository must contain placeholders only. Store secrets in the deplo
 
 ## Current milestone
 
-**M2 — Read-only research features and passive benchmarks (in progress)**
+**M3 — Pre-registered signal validation (in progress)**
 
-M0 and M1 are merged into main. M1 passed its Ubuntu server acceptance on 2026-11-09. M2 adds causal descriptive market features and passive BTC/ETH/USDT benchmarks.
+M0, M1 and M2 are merged into main. The M2 research snapshot ran successfully on Ubuntu on 2026-11-09, giving an aligned 180-day passive USDT/BTC/ETH benchmark. M3 starts with one pre-registered, non-executable seven-day momentum diagnostic.
 
 Initial collection scope:
 - Symbols: BTCUSDT and ETHUSDT.
@@ -79,6 +79,19 @@ This outputs descriptive 24h/7d momentum, 7d realized volatility, relative volum
 and fee/slippage-adjusted passive BTC/ETH buy-and-hold vs USDT cash. It is **not**
 a trading strategy and cannot generate orders. See [M2 research contract](docs/m2-research.md).
 
+## M3 first experiment — fixed signal kill test
+
+After the M3 PR merges:
+
+```bash
+ata research m3-h001 --db data/ata.sqlite3
+```
+
+The test's cutoff, 7-day lookback, daily schedule, data split and bootstrap seed
+are frozen. Only development/validation results are returned; the historical
+test set is sealed. A negative result means **archive the hypothesis, do not
+rescue it with parameter tuning**. It does not simulate a trading account.
+
 ## Project documents
 
 - [Current state](STATE.md)
@@ -86,6 +99,7 @@ a trading strategy and cannot generate orders. See [M2 research contract](docs/m
 - [Market data contract](docs/market-data.md)
 - [M1 server acceptance](docs/m1-acceptance.md)
 - [M2 research and benchmark contract](docs/m2-research.md)
+- [M3-H001 pre-registered momentum diagnostic](docs/experiments/M3-H001.md)
 - [Ubuntu 24.04 deployment](deploy/ubuntu24/README.md)
 - [Risk policy](docs/risk-policy.md)
 - [Research protocol](docs/research-protocol.md)

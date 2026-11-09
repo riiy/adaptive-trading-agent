@@ -42,6 +42,7 @@ jobs:
           ata market sync --help
           ata market audit --help
           ata research snapshot --help
+          ata research m3-h001 --help
 
       - name: Run tests
         run: pytest -q
