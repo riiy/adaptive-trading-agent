@@ -38,12 +38,24 @@ python3.12 -m venv "${VENV_DIR}"
 "${VENV_DIR}/bin/python" -m pip install --no-deps "${APP_DIR}"
 
 install -d -o ata -g ata -m 0750 "${DATA_DIR}"
+install -d -o root -g root -m 0700 /etc/ata
 install -o root -g root -m 0644 \
   "${APP_DIR}/deploy/ubuntu24/ata-market-sync.service" \
   /etc/systemd/system/ata-market-sync.service
 install -o root -g root -m 0644 \
   "${APP_DIR}/deploy/ubuntu24/ata-market-sync.timer" \
   /etc/systemd/system/ata-market-sync.timer
+
+for unit in \
+  ata-shadow-observe.service \
+  ata-shadow-observe.timer \
+  ata-shadow-settle.service \
+  ata-shadow-settle.timer
+do
+  install -o root -g root -m 0644 \
+    "${APP_DIR}/deploy/ubuntu24/${unit}" \
+    "/etc/systemd/system/${unit}"
+done
 
 systemctl daemon-reload
 
@@ -64,5 +76,9 @@ Next steps:
      systemctl list-timers ata-market-sync.timer
      journalctl -u ata-market-sync.service -n 100 --no-pager
 
-No exchange API key or LLM token is required for this read-only stage.
+M4 shadow units were installed but not enabled.
+To enable no-LLM baseline research:
+  sudo systemctl enable --now ata-shadow-observe.timer ata-shadow-settle.timer
+LLM is opt-in using root-owned /etc/ata/shadow.env; see docs/m4-shadow.md.
+No exchange API key is required, and shadow cannot trade.
 EOF

@@ -1,4 +1,4 @@
-# ATA architecture — M3
+# ATA architecture — M4
 
 ## Objective
 
@@ -14,8 +14,10 @@ Build a reproducible decision loop with an independent permission boundary. The 
 - Storage: SQLite WAL, exact decimal text columns, immutable candle primary keys, batch hashes, and ingestion provenance.
 - Operations: Ubuntu 24.04 systemd service/timer and least-privilege data directory.
 - M2 research: read-only aligned 1h feature snapshot and USDT/BTC/ETH passive benchmarks.
-- M3 mechanism screen: frozen daily momentum signal labels, chronological split,
-  week-block uncertainty estimates and sealed historical test data.
+- M3 mechanism screen: archived after failing its preregistered gate, with historical holdout sealed.
+- M4 shadow research: strictly future-dated daily frozen observations, optional bounded LLM
+  structured forecasts, write-once separate SQLite journal, append-only delayed 24h
+  feedback, and same-day static benchmarks. No action/order API.
 - CI: automated lint, format, and unit-test checks.
 
 ## Planned components, not yet implemented

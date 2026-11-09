@@ -1,0 +1,26 @@
+[Unit]
+Description=ATA settle past prospective shadow feedback (NO orders)
+After=ata-market-sync.service
+
+[Service]
+Type=oneshot
+User=ata
+Group=ata
+WorkingDirectory=/opt/ata/app
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/opt/ata/venv/bin/ata shadow settle --market-db /var/lib/ata/market.sqlite3 --shadow-db /var/lib/ata/shadow.sqlite3
+TimeoutStartSec=120
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=/var/lib/ata

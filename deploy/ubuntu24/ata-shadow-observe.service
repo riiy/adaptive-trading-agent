@@ -1,0 +1,29 @@
+[Unit]
+Description=ATA daily prospective research observation (NO orders)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=ata
+Group=ata
+WorkingDirectory=/opt/ata/app
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONDONTWRITEBYTECODE=1
+Environment=ATA_SHADOW_ENABLE_LLM=0
+EnvironmentFile=-/etc/ata/shadow.env
+ExecStart=/opt/ata/venv/bin/ata shadow observe --market-db /var/lib/ata/market.sqlite3 --shadow-db /var/lib/ata/shadow.sqlite3
+TimeoutStartSec=120
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=/var/lib/ata

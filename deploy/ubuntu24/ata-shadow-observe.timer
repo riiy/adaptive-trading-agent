@@ -1,0 +1,11 @@
+[Unit]
+Description=ATA shadow research observation once daily at 00:15 UTC
+
+[Timer]
+OnCalendar=*-*-* 00:15:00 UTC
+AccuracySec=30s
+Persistent=false
+Unit=ata-shadow-observe.service
+
+[Install]
+WantedBy=timers.target
