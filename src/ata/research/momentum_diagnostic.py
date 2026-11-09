@@ -105,9 +105,7 @@ def _load_closed_hourly(
     return result
 
 
-def _daily_observations(
-    btc: dict[int, Decimal], eth: dict[int, Decimal]
-) -> list[DailyDiagnostic]:
+def _daily_observations(btc: dict[int, Decimal], eth: dict[int, Decimal]) -> list[DailyDiagnostic]:
     if btc.keys() != eth.keys():
         raise ValueError("UNALIGNED_BTC_ETH_TIMESTAMPS")
     timestamps = list(btc)
@@ -163,8 +161,7 @@ def _describe(records: list[DailyDiagnostic]) -> dict[str, object]:
         "ETHUSDT": [a - b for a, b in zip(candidate, eth, strict=True)],
     }
     counts = {
-        asset: sum(r.selected == asset for r in records)
-        for asset in ("USDT", "BTCUSDT", "ETHUSDT")
+        asset: sum(r.selected == asset for r in records) for asset in ("USDT", "BTCUSDT", "ETHUSDT")
     }
     return {
         "days": len(records),
