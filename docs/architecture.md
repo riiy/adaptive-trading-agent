@@ -1,4 +1,4 @@
-# ATA architecture — M1
+# ATA architecture — M2
 
 ## Objective
 
@@ -13,13 +13,14 @@ Build a reproducible decision loop with an independent permission boundary. The 
 - Market data: unauthenticated Binance REST client, completed-kline validation, bounded retry handling, and paginated synchronization.
 - Storage: SQLite WAL, exact decimal text columns, immutable candle primary keys, batch hashes, and ingestion provenance.
 - Operations: Ubuntu 24.04 systemd service/timer and least-privilege data directory.
+- M2 research: read-only aligned 1h feature snapshot and USDT/BTC/ETH passive benchmarks.
 - CI: automated lint, format, and unit-test checks.
 
 ## Planned components, not yet implemented
 
 1. Streaming observer: public Binance Spot WebSocket ingestion, reconnect handling, and REST reconciliation.
-2. Feature/state layer: deterministic market features and market-state estimates.
-3. Research: registered hypotheses, reproducible backtests, baselines, and out-of-sample evaluation.
+2. State classification: any future regime labels or probabilistic estimates need independent evidence.
+3. Research: registered hypotheses, reproducible backtests and out-of-sample evaluation.
 4. Paper broker: simulated fills with fee, spread, and slippage assumptions.
 5. Feedback: prediction outcomes, realized execution outcomes, and separately labelled counterfactuals.
 6. Research agent: constrained experiment proposal and reporting tools.

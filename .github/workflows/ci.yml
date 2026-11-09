@@ -41,6 +41,7 @@ jobs:
           ata status
           ata market sync --help
           ata market audit --help
+          ata research snapshot --help
 
       - name: Run tests
         run: pytest -q

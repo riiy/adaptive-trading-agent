@@ -33,9 +33,9 @@ The public repository must contain placeholders only. Store secrets in the deplo
 
 ## Current milestone
 
-**M1 — Read-only market data foundation (in progress)**
+**M2 — Read-only research features and passive benchmarks (in progress)**
 
-M0 is implemented on the review branch. M1 adds read-only Binance Spot historical candles, strict validation, reproducible SQLite storage, and Ubuntu 24.04 service files.
+M0 and M1 are merged into main. M1 passed its Ubuntu server acceptance on 2026-11-09. M2 adds causal descriptive market features and passive BTC/ETH/USDT benchmarks.
 
 Initial collection scope:
 - Symbols: BTCUSDT and ETHUSDT.
@@ -67,12 +67,25 @@ ata market verify --db data/ata.sqlite3 --min-history-days 350 --max-lag-bars 2
 
 The collector uses Binance's unauthenticated market-data-only REST host, excludes unfinished candles, preserves decimal precision, and fails on conflicting historical candles. See [Ubuntu 24.04 deployment](deploy/ubuntu24/README.md).
 
+## M2 research snapshot (read-only)
+
+After the M2 PR merges, analyze the aligned last 180 days using **closed 1h bars only**:
+
+```bash
+ata research snapshot --db data/ata.sqlite3 --days 180 --fee-bps 10 --slippage-bps 5
+```
+
+This outputs descriptive 24h/7d momentum, 7d realized volatility, relative volume,
+and fee/slippage-adjusted passive BTC/ETH buy-and-hold vs USDT cash. It is **not**
+a trading strategy and cannot generate orders. See [M2 research contract](docs/m2-research.md).
+
 ## Project documents
 
 - [Current state](STATE.md)
 - [Architecture](docs/architecture.md)
 - [Market data contract](docs/market-data.md)
 - [M1 server acceptance](docs/m1-acceptance.md)
+- [M2 research and benchmark contract](docs/m2-research.md)
 - [Ubuntu 24.04 deployment](deploy/ubuntu24/README.md)
 - [Risk policy](docs/risk-policy.md)
 - [Research protocol](docs/research-protocol.md)
