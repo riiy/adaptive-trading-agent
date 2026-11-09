@@ -1,7 +1,7 @@
 # Adaptive Trading Agent — STATE.md
 
 **Last updated:** 2026-11-09  
-**Project phase:** RESEARCH_IDLE_NO_VALIDATED_SETUP  
+**Project phase:** M4_SHADOW_RESEARCH_BUILD  
 **System mode:** RESEARCH_ONLY  
 **Live trading:** Prohibited
 
@@ -28,7 +28,7 @@ Build a reproducible, risk-governed decision system that can determine whether a
 ## 3. Permission state
 
 ```yaml
-project_phase: RESEARCH_IDLE_NO_VALIDATED_SETUP
+project_phase: M4_SHADOW_RESEARCH_BUILD
 system_mode: RESEARCH_ONLY
 trading_allowed: false
 account_simulation_allowed: false
@@ -119,20 +119,36 @@ No active ATA strategy or approved simulation. **Do not relabel or retune H001**
 
 An economically distinct mechanism (e.g. volatility-expansion confirmation) may be considered as a *new, separately pre-registered* research candidate only if its marginal information value justifies the time/cost. It is not automatically authorized by H001's failure.
 
-## 9. Legacy research tracks — unchanged
+## 9. Current milestone — M4 prospective research feedback loop (in progress)
+
+- **H001 remains permanently archived**; final 72-day historical holdout stays SEALED. M4 does not reuse that rule.
+- Objective: measure whether a bounded LLM adds predictive/research value over deterministic baselines using **future-only** shadow decisions.
+- First permissible observation date: **2026-11-10 00:00 UTC**. No retrospective forecasts, no account or trade simulation.
+- Fixed daily decision timestamp 00:00 UTC; actual recorder runs at 00:15 UTC, and may issue records only between 00:05–00:45 UTC.
+- Source data: previous **closed** BTCUSDT/ETHUSDT 1h candles and M2 as-of feature snapshot.
+- Storage: independent `/var/lib/ata/shadow.sqlite3` with one write-once forecast per day/source and append-only next-day outcome; market DB opened read-only.
+- Baseline: unconditional USDT selection plus 0.5 fixed direction probabilities; LLM is optional and must be explicitly enabled using server-side HTTPS credentials.
+- Evaluation: positive 24h return Brier scores, gross close-to-close choice outcomes and contemporaneous BTC/ETH/USDT baselines, abstentions separately counted.
+- **No executable entries, transaction cost model, real/Paper orders, parameter tuning or automatic strategy promotion.**
+- M4 build PR is pending CI and Ubuntu real-world prospective validation. Reaching 60 days of data warrants review, not promotion.
+
+The approved engineering experiment starts with one research model. Stop or disable daily LLM usage if it does not demonstrate decision-relevant value after sufficient prospective evidence; preserve a low-cost deterministic pipeline.
+
+## 10. Legacy research tracks — unchanged
 
 - STOCK_RS_PULLBACK_v1 remains ARCHIVED_NON_TRADABLE and INVALIDATED_BY_ENGINE_ERROR.
 - ICT Binance v0.1 remains archived after negative validation/test results.
 - Existing A-share research constraints and the legacy CNY 500 per-trade risk limit remain scoped to that prior track. They are not silently transferred to ATA.
 
-## 10. Next actions
+## 11. Next actions
 
-1. Archive H001 and preserve its sealed holdout; do not rerun parameter sweeps, adjust thresholds, or model H001 fills/account equity.
-2. Continue low-cost market-data collection and health monitoring; no additional data engineering beyond decision-relevant defects.
-3. Only if justified, register one **economically distinct** low-cost hypothesis with fixed tests, cost ceiling, and kill criteria. The next research direction is **not yet selected or active**.
-4. Preserve `trading_allowed=false`, `account_simulation_allowed=false`, `ticket_generation_allowed=false`.
+1. Review M4 PR CI and the prospective protocol in `docs/m4-shadow.md`.
+2. After merging, install the new systemd units on Ubuntu. Do not automatically activate LLM calls; explicitly opt in after checking provider compatibility and monthly token budget.
+3. Record the first genuine forecast on/after 2026-11-10 00:15 UTC, verify the frozen snapshot hash and timestamp, then settle once the 24h outcome is available.
+4. Compare LLM probability calibration and selection quality with the registered static baseline after sufficient prospective observations; disable low-value calls instead of adding agents.
+5. Preserve H001's sealed holdout and all three permissions: trading=false, account_simulation=false, ticket_generation=false.
 
-## 11. Stop conditions
+## 12. Stop conditions
 
 - Do not add an execution adapter before the research and risk contracts are tested.
 - Do not add more symbols, venues, or LLM agents without evidence that they change a decision.
