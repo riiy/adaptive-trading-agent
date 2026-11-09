@@ -130,7 +130,7 @@ An economically distinct mechanism (e.g. volatility-expansion confirmation) may 
 - Baseline: unconditional USDT selection plus 0.5 fixed direction probabilities; LLM is optional and must be explicitly enabled using server-side HTTPS credentials.
 - Evaluation: positive 24h return Brier scores, gross close-to-close choice outcomes and contemporaneous BTC/ETH/USDT baselines, abstentions separately counted.
 - **No executable entries, transaction cost model, real/Paper orders, parameter tuning or automatic strategy promotion.**
-- M4 build PR is pending CI and Ubuntu real-world prospective validation. Reaching 60 days of data warrants review, not promotion.
+- PR #8 implements the first M4 prospective shadow research loop. **GitHub CI passed 85 pytest tests**, Ruff lint/format, Ubuntu install-script syntax, and shadow CLI checks. **PR still requires review/merge and real Ubuntu prospective operation**. Reaching 60 days of data warrants review, not promotion.
 
 The approved engineering experiment starts with one research model. Stop or disable daily LLM usage if it does not demonstrate decision-relevant value after sufficient prospective evidence; preserve a low-cost deterministic pipeline.
 
