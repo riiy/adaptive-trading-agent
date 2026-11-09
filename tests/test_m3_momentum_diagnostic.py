@@ -44,9 +44,7 @@ def synthetic_m3_database(tmp_path_factory):
             rows = []
             for hour in range(355 * 24 + 1):
                 timestamp = first_open + hour * HOUR_MS
-                close = start_price * (
-                    1.0 + hour * 0.00002 + 0.03 * math.sin(hour / 240.0)
-                )
+                close = start_price * (1.0 + hour * 0.00002 + 0.03 * math.sin(hour / 240.0))
                 rows.append(
                     (
                         "binance_spot",
@@ -76,9 +74,12 @@ def test_m3_diagnostic_is_frozen_and_hides_historical_test(synthetic_m3_database
     assert result["reserved_historical_test"]["days"] > 40
     assert result["development"]["days"] > MIN_VALIDATION_SAMPLES
     assert result["validation"]["days"] > MIN_VALIDATION_SAMPLES
-    assert result["development"]["days"] + result["validation"]["days"] + result[
-        "reserved_historical_test"
-    ]["days"] == result["observation_days"]
+    assert (
+        result["development"]["days"]
+        + result["validation"]["days"]
+        + result["reserved_historical_test"]["days"]
+        == result["observation_days"]
+    )
     assert "return" not in result["reserved_historical_test"]
 
 
@@ -121,16 +122,14 @@ def test_signals_only_depend_on_history_at_decision_time() -> None:
     other[prior] = Decimal("110")
 
     first = next(
-        row for row in _daily_observations(bars, other)
-        if row.decision_time_ms == decision
+        row for row in _daily_observations(bars, other) if row.decision_time_ms == decision
     )
     assert first.selected == "BTCUSDT"
 
     # A change in the next-day outcome must not alter the earlier selection.
     bars[decision + 23 * HOUR_MS] = Decimal("999")
     second = next(
-        row for row in _daily_observations(bars, other)
-        if row.decision_time_ms == decision
+        row for row in _daily_observations(bars, other) if row.decision_time_ms == decision
     )
     assert second.selected == first.selected
     assert second.candidate_return != first.candidate_return
@@ -179,8 +178,7 @@ def test_predeclared_gate_requires_positive_excess_vs_every_baseline() -> None:
             "ETHUSDT": "0.1",
         },
         "bootstrap_95pct_mean_excess_ci_pct": {
-            asset: ["0.01", "0.20"]
-            for asset in ("USDT", "BTCUSDT", "ETHUSDT")
+            asset: ["0.01", "0.20"] for asset in ("USDT", "BTCUSDT", "ETHUSDT")
         },
     }
     assert _passes_predeclared_gate(favorable, favorable)
