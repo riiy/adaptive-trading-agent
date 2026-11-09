@@ -33,9 +33,9 @@ The public repository must contain placeholders only. Store secrets in the deplo
 
 ## Current milestone
 
-**M3 — Pre-registered signal validation (in progress)**
+**M3-H001 archived; research paused pending a distinct hypothesis**
 
-M0, M1 and M2 are merged into main. The M2 research snapshot ran successfully on Ubuntu on 2026-11-09, giving an aligned 180-day passive USDT/BTC/ETH benchmark. M3 starts with one pre-registered, non-executable seven-day momentum diagnostic.
+M0, M1 and M2 are merged into main. The M2 research snapshot ran successfully on Ubuntu on 2026-11-09, giving an aligned 180-day passive USDT/BTC/ETH benchmark. M3-H001's frozen seven-day momentum rule **failed** its predeclared evidence gate on 2026-11-09 and was archived. Its 72-day historical test remains sealed; no strategy or simulation is authorized.
 
 Initial collection scope:
 - Symbols: BTCUSDT and ETHUSDT.
@@ -81,16 +81,13 @@ a trading strategy and cannot generate orders. See [M2 research contract](docs/m
 
 ## M3 first experiment — fixed signal kill test
 
-After the M3 PR merges:
+For reproducibility, the archived M3-H001 diagnostic remains available:
 
 ```bash
 ata research m3-h001 --db data/ata.sqlite3
 ```
 
-The test's cutoff, 7-day lookback, daily schedule, data split and bootstrap seed
-are frozen. Only development/validation results are returned; the historical
-test set is sealed. A negative result means **archive the hypothesis, do not
-rescue it with parameter tuning**. It does not simulate a trading account.
+The diagnostic's cutoff, rule, data split and bootstrap seed remain frozen. It returned `STOP_NO_SUFFICIENT_EVIDENCE`; rerunning it cannot reopen the archived strategy. The historical test set is sealed. It does not simulate a trading account.
 
 ## Project documents
 
