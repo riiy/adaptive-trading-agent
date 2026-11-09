@@ -12,6 +12,9 @@ license = "LicenseRef-Proprietary"
 authors = [{ name = "ATA Project" }]
 dependencies = []
 
+[project.scripts]
+ata = "ata.cli:main"
+
 [project.optional-dependencies]
 dev = [
   "pytest>=8.3,<9",
