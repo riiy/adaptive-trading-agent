@@ -306,8 +306,7 @@ def test_missing_hourly_bar_in_label_horizon_prevents_feedback(fixture_db) -> No
     observe_once(market_db, shadow_db, now_ms=DAY + 15 * 60_000)
     with sqlite3.connect(market_db) as connection:
         connection.execute(
-            "DELETE FROM klines WHERE symbol='BTCUSDT' AND interval='1h' "
-            "AND open_time_ms=?",
+            "DELETE FROM klines WHERE symbol='BTCUSDT' AND interval='1h' AND open_time_ms=?",
             (DAY + 12 * HOUR_MS,),
         )
 
@@ -321,9 +320,7 @@ def test_snapshot_integrity_is_checked_before_scoring(fixture_db) -> None:
     market_db, shadow_db = fixture_db
     observe_once(market_db, shadow_db, now_ms=DAY + 15 * 60_000)
     with sqlite3.connect(shadow_db) as connection:
-        connection.execute(
-            "UPDATE shadow_forecasts SET snapshot_json='{}' WHERE source='baseline'"
-        )
+        connection.execute("UPDATE shadow_forecasts SET snapshot_json='{}' WHERE source='baseline'")
 
     with pytest.raises(ValueError, match="SHADOW_SNAPSHOT_HASH_MISMATCH"):
         settle_pending(market_db, shadow_db, now_ms=DAY + DAY_MS + 60_000)
