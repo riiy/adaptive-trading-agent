@@ -92,7 +92,7 @@ def forecast_with_llm(
             data = response.read(32_769)
             if len(data) > 32_768:
                 raise ValueError("LLM response exceeds maximum size")
-    except (HTTPError, URLError, OSError, TimeoutError) as error:
+    except (HTTPError, URLError, OSError, TimeoutError):
         # Never propagate remote bodies, headers or URLs, which may contain secrets.
         raise ValueError("LLM provider request failed; no forecast accepted") from None
 
@@ -103,5 +103,5 @@ def forecast_with_llm(
             raise ValueError("expected exactly one completion")
         content = choices[0]["message"]["content"]
         return ShadowForecast.from_payload(json.loads(content))
-    except (KeyError, TypeError, IndexError, json.JSONDecodeError) as error:
+    except (KeyError, TypeError, IndexError, json.JSONDecodeError):
         raise ValueError("LLM returned an invalid structured forecast") from None
