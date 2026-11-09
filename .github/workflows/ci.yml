@@ -43,6 +43,9 @@ jobs:
           ata market audit --help
           ata research snapshot --help
           ata research m3-h001 --help
+          ata shadow observe --help
+          ata shadow settle --help
+          ata shadow score --help
 
       - name: Run tests
         run: pytest -q
