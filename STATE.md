@@ -98,7 +98,7 @@ M2 scope:
 - Weekly block bootstrap, deterministic seed, comparison versus cash, BTC and ETH unconditionally on identical daily observations.
 - Historical test is not genuinely blind because M2 aggregate metrics have been observed; prospective evidence required after 2026-11-10 UTC.
 - No execution/fill simulation, account allocation, order API, trading tickets or LLM agent in M3-H001.
-- M3 PR under review; CI and server validation are pending. If preregistered evidence fails, archive H001 without adjusting parameters.
+- PR #6 covers the M3-H001 diagnostic. GitHub CI passed: Ruff lint/format, CLI, Ubuntu installer checks, and **68 pytest tests**. The real Ubuntu historical diagnostic has not yet been run. If preregistered evidence fails, archive H001 without adjusting parameters.
 
 ## 8. Research status
 
