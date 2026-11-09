@@ -198,3 +198,18 @@ def test_missing_database_fails_without_creation(tmp_path) -> None:
     with pytest.raises(FileNotFoundError, match="does not exist"):
         diagnose_h001(path)
     assert not path.exists()
+
+
+def test_stale_frozen_history_is_rejected(synthetic_m3_database, tmp_path) -> None:
+    import shutil
+
+    path = tmp_path / "stale.sqlite3"
+    shutil.copy2(synthetic_m3_database, path)
+    with sqlite3.connect(path) as connection:
+        connection.execute(
+            "DELETE FROM klines WHERE open_time_ms > ?",
+            (FROZEN_ASOF_MS - 10 * HOUR_MS,),
+        )
+
+    with pytest.raises(ValueError, match="STALE_FROZEN_HISTORY"):
+        diagnose_h001(path)
