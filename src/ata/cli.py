@@ -5,12 +5,14 @@ import json
 import os
 import sqlite3
 import sys
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 
 from ata.domain import Action
 from ata.marketdata.binance import BinanceAPIError, BinancePublicClient
 from ata.marketdata.collector import MarketDataCollector
+from ata.marketdata.readiness import verify_m1
 from ata.marketdata.models import (
     SUPPORTED_INTERVALS,
     SUPPORTED_SYMBOLS,
@@ -83,6 +85,15 @@ def build_parser() -> argparse.ArgumentParser:
         default=Path(os.environ.get("ATA_DB_PATH", "data/ata.sqlite3")),
     )
 
+    verify = market_commands.add_parser("verify", help="read-only M1 six-stream quality gate")
+    verify.add_argument(
+        "--db",
+        type=_database_argument,
+        default=Path(os.environ.get("ATA_DB_PATH", "data/ata.sqlite3")),
+    )
+    verify.add_argument("--min-history-days", type=int, default=350)
+    verify.add_argument("--max-lag-bars", type=int, default=2)
+
     return parser
 
 
@@ -138,6 +149,17 @@ def _audit(args: argparse.Namespace) -> int:
     return 0 if report.missing_intervals == 0 else 1
 
 
+def _verify(args: argparse.Namespace) -> int:
+    report = verify_m1(
+        args.db,
+        now_ms=time.time_ns() // 1_000_000,
+        min_history_days=args.min_history_days,
+        max_lag_bars=args.max_lag_bars,
+    )
+    print(json.dumps(report.to_dict(), indent=2, sort_keys=True))
+    return 0 if report.passed else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     arguments = sys.argv[1:] if argv is None else argv
     if not arguments:
@@ -150,6 +172,8 @@ def main(argv: list[str] | None = None) -> int:
             return _sync(args)
         if args.command == "market" and args.market_command == "audit":
             return _audit(args)
+        if args.command == "market" and args.market_command == "verify":
+            return _verify(args)
         return _status()
     except (BinanceAPIError, MarketDataError, OSError, sqlite3.Error, ValueError) as error:
         print(f"ata: error: {error}", file=sys.stderr)
