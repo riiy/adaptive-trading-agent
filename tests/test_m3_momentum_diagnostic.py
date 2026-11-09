@@ -120,12 +120,18 @@ def test_signals_only_depend_on_history_at_decision_time() -> None:
     bars[prior] = Decimal("90")
     other[prior] = Decimal("110")
 
-    first = _daily_observations(bars, other)[0]
+    first = next(
+        row for row in _daily_observations(bars, other)
+        if row.decision_time_ms == decision
+    )
     assert first.selected == "BTCUSDT"
 
     # A change in the next-day outcome must not alter the earlier selection.
     bars[decision + 23 * HOUR_MS] = Decimal("999")
-    second = _daily_observations(bars, other)[0]
+    second = next(
+        row for row in _daily_observations(bars, other)
+        if row.decision_time_ms == decision
+    )
     assert second.selected == first.selected
     assert second.candidate_return != first.candidate_return
 
