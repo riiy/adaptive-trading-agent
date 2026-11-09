@@ -1,7 +1,7 @@
 # Adaptive Trading Agent — STATE.md
 
 **Last updated:** 2026-11-09  
-**Project phase:** M2_RESEARCH_BASELINES  
+**Project phase:** M3_SIGNAL_HYPOTHESIS  
 **System mode:** RESEARCH_ONLY  
 **Live trading:** Prohibited
 
@@ -28,7 +28,7 @@ Build a reproducible, risk-governed decision system that can determine whether a
 ## 3. Permission state
 
 ```yaml
-project_phase: M2_RESEARCH_BASELINES
+project_phase: M3_SIGNAL_HYPOTHESIS
 system_mode: RESEARCH_ONLY
 trading_allowed: false
 account_simulation_allowed: false
@@ -77,18 +77,30 @@ M1 acceptance requires:
 4. Audit output is reviewed; any historical gaps are explained or backfilled from source, never synthetically filled.
 5. systemd timer and journald operation are verified.
 
-## 6. Current milestone — M2 descriptive features and passive benchmarks
+## 6. Completed milestone — M2 descriptive features and passive benchmarks
 
 M2 scope:
 - Completed, aligned 1h BTCUSDT and ETHUSDT candles only.
 - 24h and 7d close-to-close momentum, 7d realized annualized volatility, and last24h/preceding144h relative volume.
 - Passive USDT cash, BTC buy-and-hold and ETH buy-and-hold with explicitly labeled hypothetical fee/slippage assumptions.
 - Research snapshot strictly as-of: closed bars only, no future leakage, no orders, no model fitting.
-- M2 PR under review; CI and server smoke test are independent acceptance gates.
+- PR #5 merged to main, M2 GitHub CI passed all 59 tests.
+- 2026-11-09 actual Ubuntu read-only snapshot: status DESCRIPTIVE_ONLY, same completed hour for BTC and ETH, 180-day USDT buy-and-hold 0%, BTC -8.357134%, ETH -7.627509% with **illustrative** 10bps fees and 5bps slippage per side.
+- 24h momentum BTC -1.791035%, ETH -4.760456%; 7d momentum BTC -4.983123%, ETH -7.125438%; 7d historic annualized volatility BTC 41.143348%, ETH 60.260047%.
+- M2 status: **M2_ACCEPTED**, descriptive baselines only, no evidence of alpha.
 
-Next gate: all M2 unit tests + a real server `ata research snapshot --db /var/lib/ata/market.sqlite3 --days 180` report must pass. M2 completion provides infrastructure and baseline definitions, **not** evidence of an investable edge.
+## 7. Current milestone — M3-H001 preregistered signal kill test
 
-## 7. Research status
+- Mechanism: delayed information diffusion might cause positive prior 7-day momentum to predict the next 24h gross return.
+- Frozen timestamp: 2026-11-09T06:46:19.012Z (same as M2 operator snapshot); 365-day maximum historical scope.
+- One fixed BTC/ETH/USDT daily rule, no threshold tuning. Rule and strict kill criteria in `docs/experiments/M3-H001.md`.
+- Chronological 60% development, 20% validation, final 20% sealed historical test.
+- Weekly block bootstrap, deterministic seed, comparison versus cash, BTC and ETH unconditionally on identical daily observations.
+- Historical test is not genuinely blind because M2 aggregate metrics have been observed; prospective evidence required after 2026-11-10 UTC.
+- No execution/fill simulation, account allocation, order API, trading tickets or LLM agent in M3-H001.
+- M3 PR under review; CI and server validation are pending. If preregistered evidence fails, archive H001 without adjusting parameters.
+
+## 8. Research status
 
 No ATA strategy is active or authorized.
 
@@ -98,21 +110,21 @@ Potential future hypotheses:
 
 These are unvalidated hypotheses, not trading signals. Each requires preregistration, baselines, time-ordered out-of-sample tests, cost stress, robustness analysis, and explicit stop criteria.
 
-## 8. Legacy research tracks — unchanged
+## 9. Legacy research tracks — unchanged
 
 - STOCK_RS_PULLBACK_v1 remains ARCHIVED_NON_TRADABLE and INVALIDATED_BY_ENGINE_ERROR.
 - ICT Binance v0.1 remains archived after negative validation/test results.
 - Existing A-share research constraints and the legacy CNY 500 per-trade risk limit remain scoped to that prior track. They are not silently transferred to ATA.
 
-## 9. Next actions
+## 10. Next actions
 
-1. Review M2 read-only baseline PR and CI results.
-2. After merge, update the Ubuntu deployment and run the 180-day causal snapshot.
-3. Audit as-of alignment, hypothetical cost assumptions, no lookahead, and reproducibility.
-4. If accepted, preregister at most two economic hypotheses with fixed train/validation/test splits and cost stress before strategy research.
-5. Keep `trading_allowed=false`, `account_simulation_allowed=false`, `ticket_generation_allowed=false`.
+1. Review M3-H001 PR and CI test result.
+2. After merging, update the Ubuntu app and run `ata research m3-h001 --db /var/lib/ata/market.sqlite3` once, recording the development and validation report.
+3. Apply the preregistered kill criteria. If `STOP_NO_SUFFICIENT_EVIDENCE`, archive M3-H001. Do not retune it.
+4. If `REVIEW_BEFORE_HISTORICAL_TEST`, separately evaluate holdout-release approval and genuine prospective signal evaluation, then model real execution costs before paper permissions.
+5. Preserve `trading_allowed=false`, `account_simulation_allowed=false`, `ticket_generation_allowed=false`.
 
-## 10. Stop conditions
+## 11. Stop conditions
 
 - Do not add an execution adapter before the research and risk contracts are tested.
 - Do not add more symbols, venues, or LLM agents without evidence that they change a decision.
