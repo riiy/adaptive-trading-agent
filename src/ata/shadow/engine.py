@@ -215,9 +215,7 @@ def settle_pending(
 
             results: dict[str, str] = {}
             for symbol in ("BTCUSDT", "ETHUSDT"):
-                if not _complete_horizon(
-                    market, symbol=symbol, day_ms=item.day_ms, now_ms=now
-                ):
+                if not _complete_horizon(market, symbol=symbol, day_ms=item.day_ms, now_ms=now):
                     break
                 reference = _close(
                     market,
