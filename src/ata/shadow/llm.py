@@ -9,9 +9,20 @@ from dataclasses import dataclass
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
-from urllib.request import Request, urlopen
+from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from ata.shadow.models import ShadowForecast, canonical_json
+
+class _RejectRedirects(HTTPRedirectHandler):
+    """Do not forward a provider bearer token to a redirect target."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def _open_without_redirects(request: Request, *, timeout: float):
+    return build_opener(_RejectRedirects).open(request, timeout=timeout)
+
 
 SYSTEM_PROMPT = (
     "You are a research forecaster, NOT a trader. Only describe your uncertainty. "
@@ -60,7 +71,7 @@ def forecast_with_llm(
     snapshot: dict[str, object],
     settings: LLMSettings,
     *,
-    opener: Any = urlopen,
+    opener: Any = _open_without_redirects,
 ) -> ShadowForecast:
     """One bounded, non-retried OpenAI-compatible chat completion request."""
     body = canonical_json(
