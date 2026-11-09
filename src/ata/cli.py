@@ -21,6 +21,7 @@ from ata.marketdata.models import (
 from ata.marketdata.readiness import verify_m1
 from ata.marketdata.storage import MarketDataRepository
 from ata.research.baselines import research_snapshot
+from ata.research.momentum_diagnostic import diagnose_h001
 from ata.risk import RiskContext, RiskGovernor, RiskPolicy
 
 
@@ -111,6 +112,15 @@ def build_parser() -> argparse.ArgumentParser:
     snapshot.add_argument("--fee-bps", type=Decimal, default=Decimal("10"))
     snapshot.add_argument("--slippage-bps", type=Decimal, default=Decimal("5"))
 
+    m3 = research_commands.add_parser(
+        "m3-h001", help="frozen, non-executable seven-day momentum diagnostic"
+    )
+    m3.add_argument(
+        "--db",
+        type=_database_argument,
+        default=Path(os.environ.get("ATA_DB_PATH", "data/ata.sqlite3")),
+    )
+
     return parser
 
 
@@ -193,6 +203,12 @@ def _research_snapshot(args: argparse.Namespace) -> int:
     return 0
 
 
+def _m3_h001(args: argparse.Namespace) -> int:
+    report = diagnose_h001(args.db)
+    print(json.dumps(report, indent=2, sort_keys=True))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     arguments = sys.argv[1:] if argv is None else argv
     if not arguments:
@@ -209,6 +225,8 @@ def main(argv: list[str] | None = None) -> int:
             return _verify(args)
         if args.command == "research" and args.research_command == "snapshot":
             return _research_snapshot(args)
+        if args.command == "research" and args.research_command == "m3-h001":
+            return _m3_h001(args)
         return _status()
     except (BinanceAPIError, MarketDataError, OSError, sqlite3.Error, ValueError) as error:
         print(f"ata: error: {error}", file=sys.stderr)
