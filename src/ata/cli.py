@@ -23,6 +23,8 @@ from ata.marketdata.storage import MarketDataRepository
 from ata.research.baselines import research_snapshot
 from ata.research.momentum_diagnostic import diagnose_h001
 from ata.risk import RiskContext, RiskGovernor, RiskPolicy
+from ata.shadow.engine import observe_once, settle_pending
+from ata.shadow.scoring import shadow_score
 
 
 def _utc_milliseconds(value: str | None) -> int | None:
@@ -121,6 +123,41 @@ def build_parser() -> argparse.ArgumentParser:
         default=Path(os.environ.get("ATA_DB_PATH", "data/ata.sqlite3")),
     )
 
+    shadow = commands.add_parser("shadow", help="prospective-only non-executable research")
+    shadow_commands = shadow.add_subparsers(dest="shadow_command", required=True)
+
+    observe = shadow_commands.add_parser("observe", help="record today's UTC decision window")
+    observe.add_argument(
+        "--market-db",
+        type=_database_argument,
+        default=Path(os.environ.get("ATA_DB_PATH", "data/ata.sqlite3")),
+    )
+    observe.add_argument(
+        "--shadow-db",
+        type=_database_argument,
+        default=Path(os.environ.get("ATA_SHADOW_DB_PATH", "data/shadow.sqlite3")),
+    )
+    observe.add_argument("--llm", action="store_true", help="opt in to one LLM call")
+
+    settle = shadow_commands.add_parser("settle", help="append ready 24h feedback")
+    settle.add_argument(
+        "--market-db",
+        type=_database_argument,
+        default=Path(os.environ.get("ATA_DB_PATH", "data/ata.sqlite3")),
+    )
+    settle.add_argument(
+        "--shadow-db",
+        type=_database_argument,
+        default=Path(os.environ.get("ATA_SHADOW_DB_PATH", "data/shadow.sqlite3")),
+    )
+
+    score = shadow_commands.add_parser("score", help="summarize prospective feedback")
+    score.add_argument(
+        "--shadow-db",
+        type=_database_argument,
+        default=Path(os.environ.get("ATA_SHADOW_DB_PATH", "data/shadow.sqlite3")),
+    )
+
     return parser
 
 
@@ -209,6 +246,25 @@ def _m3_h001(args: argparse.Namespace) -> int:
     return 0
 
 
+def _shadow_observe(args: argparse.Namespace) -> int:
+    enabled = args.llm or os.getenv("ATA_SHADOW_ENABLE_LLM") == "1"
+    report = observe_once(args.market_db, args.shadow_db, enable_llm=enabled)
+    print(json.dumps(report, indent=2, sort_keys=True))
+    return 0
+
+
+def _shadow_settle(args: argparse.Namespace) -> int:
+    report = settle_pending(args.market_db, args.shadow_db)
+    print(json.dumps(report, indent=2, sort_keys=True))
+    return 0
+
+
+def _shadow_score(args: argparse.Namespace) -> int:
+    report = shadow_score(args.shadow_db)
+    print(json.dumps(report, indent=2, sort_keys=True))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     arguments = sys.argv[1:] if argv is None else argv
     if not arguments:
@@ -227,6 +283,12 @@ def main(argv: list[str] | None = None) -> int:
             return _research_snapshot(args)
         if args.command == "research" and args.research_command == "m3-h001":
             return _m3_h001(args)
+        if args.command == "shadow" and args.shadow_command == "observe":
+            return _shadow_observe(args)
+        if args.command == "shadow" and args.shadow_command == "settle":
+            return _shadow_settle(args)
+        if args.command == "shadow" and args.shadow_command == "score":
+            return _shadow_score(args)
         return _status()
     except (BinanceAPIError, MarketDataError, OSError, sqlite3.Error, ValueError) as error:
         print(f"ata: error: {error}", file=sys.stderr)
