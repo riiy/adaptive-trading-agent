@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from ata.shadow.models import ShadowForecast, canonical_json
+from ata.shadow.models import ShadowForecast, canonical_json, sha256_json
 
 
 @dataclass(frozen=True, slots=True)
@@ -119,7 +119,8 @@ class ShadowStore:
         try:
             rows = connection.execute(
                 """
-                SELECT f.day_ms, f.source, f.forecast_json, f.snapshot_json
+                SELECT f.day_ms, f.source, f.forecast_json, f.snapshot_json,
+                       f.snapshot_hash
                 FROM shadow_forecasts f
                 LEFT JOIN shadow_feedback b
                   ON b.day_ms=f.day_ms AND b.source=f.source
@@ -130,15 +131,20 @@ class ShadowStore:
         finally:
             connection.close()
 
-        return [
-            PendingForecast(
-                day_ms=day_ms,
-                source=source,
-                forecast=ShadowForecast.from_payload(json.loads(forecast_json)),
-                snapshot=json.loads(snapshot_json),
+        pending: list[PendingForecast] = []
+        for day_ms, source, forecast_json, snapshot_json, snapshot_hash in rows:
+            snapshot = json.loads(snapshot_json)
+            if sha256_json(snapshot) != snapshot_hash:
+                raise ValueError("SHADOW_SNAPSHOT_HASH_MISMATCH")
+            pending.append(
+                PendingForecast(
+                    day_ms=day_ms,
+                    source=source,
+                    forecast=ShadowForecast.from_payload(json.loads(forecast_json)),
+                    snapshot=snapshot,
+                )
             )
-            for day_ms, source, forecast_json, snapshot_json in rows
-        ]
+        return pending
 
     def append_feedback(
         self,
