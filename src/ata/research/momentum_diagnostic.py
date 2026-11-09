@@ -64,7 +64,9 @@ def _block_ci(values: list[float]) -> tuple[float, float]:
         sample: list[float] = []
         while len(sample) < length:
             first = rng.randrange(length)
-            sample.extend(values[(first + offset) % length] for offset in range(BOOTSTRAP_BLOCK_DAYS))
+            sample.extend(
+                values[(first + offset) % length] for offset in range(BOOTSTRAP_BLOCK_DAYS)
+            )
         means.append(_mean(sample[:length]))
     return _quantile(means, 0.025), _quantile(means, 0.975)
 
