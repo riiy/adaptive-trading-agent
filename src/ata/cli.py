@@ -12,12 +12,12 @@ from pathlib import Path
 from ata.domain import Action
 from ata.marketdata.binance import BinanceAPIError, BinancePublicClient
 from ata.marketdata.collector import MarketDataCollector
-from ata.marketdata.readiness import verify_m1
 from ata.marketdata.models import (
     SUPPORTED_INTERVALS,
     SUPPORTED_SYMBOLS,
     MarketDataError,
 )
+from ata.marketdata.readiness import verify_m1
 from ata.marketdata.storage import MarketDataRepository
 from ata.risk import RiskContext, RiskGovernor, RiskPolicy
 
