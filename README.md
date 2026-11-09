@@ -33,9 +33,9 @@ The public repository must contain placeholders only. Store secrets in the deplo
 
 ## Current milestone
 
-**M3-H001 archived; research paused pending a distinct hypothesis**
+**M4 — Prospective shadow research and feedback (in development)**
 
-M0, M1 and M2 are merged into main. The M2 research snapshot ran successfully on Ubuntu on 2026-11-09, giving an aligned 180-day passive USDT/BTC/ETH benchmark. M3-H001's frozen seven-day momentum rule **failed** its predeclared evidence gate on 2026-11-09 and was archived. Its 72-day historical test remains sealed; no strategy or simulation is authorized.
+M0, M1 and M2 are merged into main. The M2 research snapshot ran successfully on Ubuntu on 2026-11-09, giving an aligned 180-day passive USDT/BTC/ETH benchmark. M3-H001's frozen seven-day momentum rule failed and is permanently archived. Its 72-day historical holdout remains sealed. M4 develops an **independent** prospective shadow research loop, without activating any strategy, account simulation or trading.
 
 Initial collection scope:
 - Symbols: BTCUSDT and ETHUSDT.
@@ -89,6 +89,21 @@ ata research m3-h001 --db data/ata.sqlite3
 
 The diagnostic's cutoff, rule, data split and bootstrap seed remain frozen. It returned `STOP_NO_SUFFICIENT_EVIDENCE`; rerunning it cannot reopen the archived strategy. The historical test set is sealed. It does not simulate a trading account.
 
+## M4 prospective shadow research (opt-in, no orders)
+
+After M4 has merged and Ubuntu is updated, two systemd timers can run:
+daily **00:15 UTC** forecast recording and daily **01:05 UTC** delayed feedback.
+LLM calls are disabled until separately enabled in a root-owned server environment file.
+
+```bash
+ata shadow observe --help
+ata shadow settle --help
+ata shadow score --shadow-db data/shadow.sqlite3
+```
+
+No forecasts may be backdated; the earliest valid daily cutoff is
+**2026-11-10 00:00 UTC**. See [M4 operating protocol](docs/m4-shadow.md).
+
 ## Project documents
 
 - [Current state](STATE.md)
@@ -96,7 +111,8 @@ The diagnostic's cutoff, rule, data split and bootstrap seed remain frozen. It r
 - [Market data contract](docs/market-data.md)
 - [M1 server acceptance](docs/m1-acceptance.md)
 - [M2 research and benchmark contract](docs/m2-research.md)
-- [M3-H001 pre-registered momentum diagnostic](docs/experiments/M3-H001.md)
+- [M3-H001 archived experiment](docs/experiments/M3-H001.md)
+- [M4 prospective shadow research](docs/m4-shadow.md)
 - [Ubuntu 24.04 deployment](deploy/ubuntu24/README.md)
 - [Risk policy](docs/risk-policy.md)
 - [Research protocol](docs/research-protocol.md)
