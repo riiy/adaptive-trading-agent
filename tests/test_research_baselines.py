@@ -111,8 +111,7 @@ def test_missing_hour_causes_explicit_failure(research_database) -> None:
     path, asof = research_database
     with sqlite3.connect(path) as connection:
         connection.execute(
-            "DELETE FROM klines WHERE symbol='BTCUSDT' AND interval='1h' "
-            "AND open_time_ms=?",
+            "DELETE FROM klines WHERE symbol='BTCUSDT' AND interval='1h' AND open_time_ms=?",
             (asof - HOUR_MS * 24,),
         )
 
