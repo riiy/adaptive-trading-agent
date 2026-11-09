@@ -34,10 +34,7 @@ def seeded_database(tmp_path):
         for interval in REQUIRED_INTERVALS:
             width = INTERVAL_MS[interval]
             last_closed = (now_ms // width - 1) * width
-            rows = [
-                candle(symbol, interval, last_closed - width * i)
-                for i in (2, 1, 0)
-            ]
+            rows = [candle(symbol, interval, last_closed - width * i) for i in (2, 1, 0)]
             repository.insert_batch(rows, fetched_at_server_ms=now_ms)
     return path, now_ms
 
@@ -73,8 +70,7 @@ def test_missing_interval_is_reported_without_fabricating_data(seeded_database) 
             "ORDER BY open_time_ms LIMIT 1 OFFSET 1"
         ).fetchone()
         connection.execute(
-            "DELETE FROM klines WHERE symbol='BTCUSDT' AND interval='15m' "
-            "AND open_time_ms=?",
+            "DELETE FROM klines WHERE symbol='BTCUSDT' AND interval='15m' AND open_time_ms=?",
             (row[0],),
         )
 
