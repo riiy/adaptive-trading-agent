@@ -57,6 +57,32 @@ def _close(
     return value
 
 
+def _complete_horizon(
+    connection: sqlite3.Connection,
+    *,
+    symbol: str,
+    day_ms: int,
+    now_ms: int,
+) -> bool:
+    """Reject next-day outcomes with any missing or not-yet-closed hourly bar."""
+    first = day_ms - HOUR_MS
+    last = day_ms + DAY_MS - HOUR_MS
+    bars = connection.execute(
+        """
+        SELECT open_time_ms, close_time_ms
+        FROM klines
+        WHERE venue='binance_spot' AND symbol=? AND interval='1h'
+          AND open_time_ms BETWEEN ? AND ?
+        ORDER BY open_time_ms
+        """,
+        (symbol, first, last),
+    ).fetchall()
+    return len(bars) == 25 and all(
+        open_ms == first + index * HOUR_MS and close_ms < now_ms
+        for index, (open_ms, close_ms) in enumerate(bars)
+    )
+
+
 def _observation_snapshot(market_db: str | Path, *, day_ms: int) -> dict[str, object]:
     snapshot = research_snapshot(
         market_db,
@@ -189,6 +215,10 @@ def settle_pending(
 
             results: dict[str, str] = {}
             for symbol in ("BTCUSDT", "ETHUSDT"):
+                if not _complete_horizon(
+                    market, symbol=symbol, day_ms=item.day_ms, now_ms=now
+                ):
+                    break
                 reference = _close(
                     market,
                     symbol=symbol,
