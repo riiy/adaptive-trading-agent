@@ -1,7 +1,7 @@
 # Adaptive Trading Agent — STATE.md
 
-**Last updated:** 2026-11-08  
-**Project phase:** M1_MARKET_DATA  
+**Last updated:** 2026-11-09  
+**Project phase:** M1_VERIFY_PENDING  
 **System mode:** RESEARCH_ONLY  
 **Live trading:** Prohibited
 
@@ -28,7 +28,7 @@ Build a reproducible, risk-governed decision system that can determine whether a
 ## 3. Permission state
 
 ```yaml
-project_phase: M1_MARKET_DATA
+project_phase: M1_VERIFY_PENDING
 system_mode: RESEARCH_ONLY
 trading_allowed: false
 account_simulation_allowed: false
@@ -46,11 +46,11 @@ These permissions must remain false until separate evidence and approval gates a
 - Fail-closed risk and permission governor.
 - Automated CI.
 - 19 pytest tests passed on the M0 PR head, including research-mode rejection, invalid inputs, unhealthy data, drawdown, position limits, exit-path handling, and journal replay.
-- PR #1 is open and Ready for review; it has not been merged into main.
+- PR #1 has been merged. M0 implementation is present on main.
 
 ## 5. Current milestone — M1 market data
 
-Implemented on branch `feat/m1-market-data`; PR #2 is a stacked draft targeting `feat/m0-foundation`.
+Implementation is present on `main`. PR #1 and PR #2 are merged. The operator confirms Ubuntu 24.04 deployment and successful live Binance data downloads. This user-reported fact does not yet establish database quality, idempotence on the server, or continuous timer health.
 
 - Unauthenticated Binance REST client using `data-api.binance.vision`.
 - Server-time-based filtering of unfinished candles.
@@ -61,8 +61,9 @@ Implemented on branch `feat/m1-market-data`; PR #2 is a stacked draft targeting 
 - CLI commands for market sync and data-quality audit.
 - Ubuntu 24.04 systemd service/timer and installation script.
 - M1 GitHub Actions CI passed: Ruff lint, Ruff format, and 41 pytest tests.
-- PR #2 is open and Ready for review, stacked on the M0 branch.
-- The Ubuntu server has not yet been deployed or smoke-tested; CI does not substitute for that operational check.
+- PR #2 is merged; Binance data downloads have succeeded on the Ubuntu server (operator report).
+- A new read-only six-stream readiness gate is being reviewed in PR #4.
+- Database audit output, history coverage, staleness, idempotence, and systemd timer health have not been independently verified.
 
 M1 acceptance requires:
 1. Ruff and all automated tests pass.
@@ -89,11 +90,11 @@ These are unvalidated hypotheses, not trading signals. Each requires preregistra
 
 ## 8. Next actions
 
-1. Review PR #1 and PR #2; PR #2 depends on PR #1.
-2. Merge PR #1 first, then retarget/rebase PR #2 onto main.
-3. After both PRs are merged, deploy to Ubuntu 24.04 using `deploy/ubuntu24/install.sh`.
-4. Run a one-year historical backfill for 15m, 1h, and 4h BTCUSDT/ETHUSDT.
-5. Enable the five-minute systemd timer and review data-quality reports before strategy research.
+1. Review and merge the M1 readiness-gate PR.
+2. On Ubuntu, run `ata market verify --db /var/lib/ata/market.sqlite3 --min-history-days 350 --max-lag-bars 2`.
+3. Confirm the five-minute systemd timer, recurring journal runs and any sync failures.
+4. If the gate passes, explicitly record M1 acceptance and begin the smallest sufficient M2 feature research task.
+5. If the gate fails, repair only the reported data issue before proceeding.
 
 ## 9. Stop conditions
 

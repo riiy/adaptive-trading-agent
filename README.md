@@ -62,6 +62,7 @@ After installing the package, fetch the last 365 days of completed candles:
 ```bash
 ata market sync --symbols BTCUSDT ETHUSDT --intervals 15m 1h 4h --lookback-days 365 --db data/ata.sqlite3
 ata market audit --symbol BTCUSDT --interval 1h --db data/ata.sqlite3
+ata market verify --db data/ata.sqlite3 --min-history-days 350 --max-lag-bars 2
 ```
 
 The collector uses Binance's unauthenticated market-data-only REST host, excludes unfinished candles, preserves decimal precision, and fails on conflicting historical candles. See [Ubuntu 24.04 deployment](deploy/ubuntu24/README.md).
@@ -71,6 +72,7 @@ The collector uses Binance's unauthenticated market-data-only REST host, exclude
 - [Current state](STATE.md)
 - [Architecture](docs/architecture.md)
 - [Market data contract](docs/market-data.md)
+- [M1 server acceptance](docs/m1-acceptance.md)
 - [Ubuntu 24.04 deployment](deploy/ubuntu24/README.md)
 - [Risk policy](docs/risk-policy.md)
 - [Research protocol](docs/research-protocol.md)
