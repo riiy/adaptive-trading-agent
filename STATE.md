@@ -62,7 +62,7 @@ Implementation is present on `main`. PR #1 and PR #2 are merged. The operator co
 - Ubuntu 24.04 systemd service/timer and installation script.
 - M1 GitHub Actions CI passed: Ruff lint, Ruff format, and 41 pytest tests.
 - PR #2 is merged; Binance data downloads have succeeded on the Ubuntu server (operator report).
-- A new read-only six-stream readiness gate is being reviewed in PR #3.
+- A new read-only six-stream readiness gate is being reviewed in PR #4.
 - Database audit output, history coverage, staleness, idempotence, and systemd timer health have not been independently verified.
 
 M1 acceptance requires:
