@@ -102,6 +102,9 @@ def _load_closed_hourly(
             raise ValueError(f"INVALID_CLOSE:{symbol}")
         result[stamp] = value
         previous = stamp
+    expected_last = (FROZEN_ASOF_MS // HOUR_MS - 1) * HOUR_MS
+    if expected_last - previous > 2 * HOUR_MS:
+        raise ValueError(f"STALE_FROZEN_HISTORY:{symbol}")
     return result
 
 
