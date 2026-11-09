@@ -104,8 +104,7 @@ def _hourly_rows(
         )
 
     rows = [
-        HourlyBar(int(t), Decimal(close), Decimal(volume))
-        for t, close, volume in reversed(records)
+        HourlyBar(int(t), Decimal(close), Decimal(volume)) for t, close, volume in reversed(records)
     ]
     if rows[-1].open_time_ms != end_open_time_ms:
         raise ValueError(f"STALE_OR_UNALIGNED_SERIES:{symbol}")
@@ -122,7 +121,7 @@ def _hourly_rows(
 
 
 def _features(symbol: str, rows: list[HourlyBar]) -> SymbolFeatures:
-    tail = rows[-(LOOKBACK_HOURS + 1):]
+    tail = rows[-(LOOKBACK_HOURS + 1) :]
     closes = [row.close for row in tail]
     last = closes[-1]
     momentum_24h = (last / closes[-25] - 1) * 100
