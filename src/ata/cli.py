@@ -24,6 +24,7 @@ from ata.research.baselines import research_snapshot
 from ata.research.momentum_diagnostic import diagnose_h001
 from ata.risk import RiskContext, RiskGovernor, RiskPolicy
 from ata.shadow.engine import observe_once, settle_pending
+from ata.shadow.llm import LLMSettings, forecast_with_llm
 from ata.shadow.scoring import shadow_score
 
 
@@ -151,6 +152,11 @@ def build_parser() -> argparse.ArgumentParser:
         default=Path(os.environ.get("ATA_SHADOW_DB_PATH", "data/shadow.sqlite3")),
     )
 
+    shadow_commands.add_parser(
+        "probe-llm",
+        help="one safe provider test call; never creates a forecast or writes to a database",
+    )
+
     score = shadow_commands.add_parser("score", help="summarize prospective feedback")
     score.add_argument(
         "--shadow-db",
@@ -265,6 +271,37 @@ def _shadow_score(args: argparse.Namespace) -> int:
     return 0
 
 
+def _shadow_probe_llm() -> int:
+    # This deliberately uses no historical or live market snapshot, makes one
+    # external API call, and never opens or writes any project database.
+    settings = LLMSettings.from_environment()
+    forecast_with_llm(
+        {
+            "scope": "LLM_CONNECTIVITY_PROBE_ONLY",
+            "market_data": "NONE",
+            "instruction": (
+                "Connectivity test only: abstain and report 0.5 direction "
+                "probabilities. No financial prediction is requested."
+            ),
+        },
+        settings,
+    )
+    print(
+        json.dumps(
+            {
+                "status": "PASS",
+                "provider_request": "COMPATIBLE_RESPONSE",
+                "forecast_recorded": False,
+                "database_mutated": False,
+                "trading_allowed": False,
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    )
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     arguments = sys.argv[1:] if argv is None else argv
     if not arguments:
@@ -289,6 +326,8 @@ def main(argv: list[str] | None = None) -> int:
             return _shadow_settle(args)
         if args.command == "shadow" and args.shadow_command == "score":
             return _shadow_score(args)
+        if args.command == "shadow" and args.shadow_command == "probe-llm":
+            return _shadow_probe_llm()
         return _status()
     except (BinanceAPIError, MarketDataError, OSError, sqlite3.Error, ValueError) as error:
         print(f"ata: error: {error}", file=sys.stderr)
