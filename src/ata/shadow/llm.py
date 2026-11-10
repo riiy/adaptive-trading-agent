@@ -51,6 +51,10 @@ class LLMSettings:
         model = os.getenv("ATA_LLM_MODEL", "")
         if not base or not key or not model:
             raise ValueError("LLM disabled: ATA_LLM_BASE_URL, ATA_LLM_MODEL and API key required")
+        if base.endswith("/chat/completions"):
+            raise ValueError(
+                "ATA_LLM_BASE_URL must be the API base, without /chat/completions"
+            )
         return cls(url=base + "/chat/completions", model=model, api_key=key)
 
     def __post_init__(self) -> None:
@@ -104,9 +108,15 @@ def forecast_with_llm(
             data = response.read(32_769)
             if len(data) > 32_768:
                 raise ValueError("LLM response exceeds maximum size")
-    except (HTTPError, URLError, OSError, TimeoutError):
-        # Never propagate remote bodies, headers or URLs, which may contain secrets.
-        raise ValueError("LLM provider request failed; no forecast accepted") from None
+    except HTTPError as error:
+        # Expose ONLY the numeric HTTP status, not headers, response bodies,
+        # URLs, or the original exception (which may include credentials).
+        status = error.code if isinstance(error.code, int) and 100 <= error.code <= 599 else 0
+        raise ValueError(f"LLM_PROVIDER_HTTP_{status}; no forecast accepted") from None
+    except TimeoutError:
+        raise ValueError("LLM_PROVIDER_TIMEOUT; no forecast accepted") from None
+    except (URLError, OSError):
+        raise ValueError("LLM_PROVIDER_NETWORK_ERROR; no forecast accepted") from None
 
     try:
         response_object = json.loads(data)
