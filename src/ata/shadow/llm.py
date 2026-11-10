@@ -52,9 +52,7 @@ class LLMSettings:
         if not base or not key or not model:
             raise ValueError("LLM disabled: ATA_LLM_BASE_URL, ATA_LLM_MODEL and API key required")
         if base.endswith("/chat/completions"):
-            raise ValueError(
-                "ATA_LLM_BASE_URL must be the API base, without /chat/completions"
-            )
+            raise ValueError("ATA_LLM_BASE_URL must be the API base, without /chat/completions")
         return cls(url=base + "/chat/completions", model=model, api_key=key)
 
     def __post_init__(self) -> None:
