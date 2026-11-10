@@ -154,11 +154,11 @@ The approved engineering experiment starts with one research model. Stop or disa
 
 ## 11. Next actions
 
-1. Check effective LLM API style, endpoint path and model ID inside the real systemd-run EnvironmentFile context; print no secrets.
-2. If effective style is `responses`, compare ONE minimal `model`+`input: hello` request using that same service environment with the operator's previously successful curl. Record safe HTTP status only. Consider HTTP client headers, token/model mismatch, and extra `max_output_tokens`/system prompt as possible differentiators rather than guessing.
-3. Fix only the evidenced provider integration problem; stop recurring LLM calls if unresolved to avoid repeated errors/cost. Keep baseline collector running.
-4. Preserve 2026-11-10 Baseline; do not backdate missed LLM predictions. Verify next-day baseline settlement separately.
-5. Preserve H001's sealed holdout and all three permissions: trading=false, account_simulation=false, ticket_generation=false.
+1. Merge the narrow opt-in User-Agent patch after CI and reinstall the Ubuntu application; set `ATA_LLM_USER_AGENT=curl/8.5.0` in root-owned `/etc/ata/shadow.env` for the proved temporary compatibility path.
+2. Run the existing one-call `ata shadow probe-llm` through systemd to verify the full Responses request and structured forecast parsing **without writing a forecast**. If it still fails, diagnose only the new evidenced failure; do not guess.
+3. Verify the next true UTC 00:15 prospective observation and subsequent 24h settlement; preserve the first day's missing LLM record as missing, never fabricated.
+4. Inspect the filtering layer before Nginx and replace User-Agent mimicry with a narrowly scoped ATA research-client allowance. Never globally disable WAF/bot protection.
+5. Preserve 2026-11-10 Baseline, H001's sealed holdout, and all three permissions: trading=false, account_simulation=false, ticket_generation=false.
 
 ## 12. Stop conditions
 
