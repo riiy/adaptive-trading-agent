@@ -202,6 +202,37 @@ The Responses implementation uses strict JSON validation and does **not**
 accept tool-call output, reasoning text, incomplete results, or extra forecast
 fields as valid shadow forecasts. This is not evidence of investment quality.
 
+### Provider-edge User-Agent compatibility (verified 2026-11-10)
+
+On the operator's infrastructure, a minimal Python `urllib` request to
+`/v1/responses` using the correct host, model, HTTPS route, and environment
+returns HTTP 403 **without any Nginx access log**. A repeat with **only**
+`User-Agent: curl/8.5.0` changed returns **HTTP 200** and reaches Nginx.
+This supports client-header-dependent filtering **before the logged Nginx
+access point**, not a proven LiteLLM API permission fault. The precise edge
+component (CDN/WAF/reverse proxy/other filter) remains unknown.
+
+For a short-term operator-approved compatibility workaround, the adapter accepts
+a validated, **opt-in** User-Agent. In `/etc/ata/shadow.env`:
+
+```ini
+ATA_LLM_USER_AGENT=curl/8.5.0
+```
+
+The standard `urllib` behavior remains unchanged if this is not set. ASCII
+control characters and overlong header values are rejected. The override is
+applied to both `probe-llm` and the research-only daily observation; it
+does not enable any trading APIs.
+
+After merging/installing the PR, run **one** non-mutating provider probe using
+the existing systemd command below. A successful probe confirms network/API
+compatibility but **not** tomorrow's forecast creation or model accuracy.
+
+Long-term, investigate the security events before Nginx and allow a distinct
+ATA research-client identity using narrowly scoped origin/edge rules. Do **not**
+globally disable bot protection or grant an unrestricted path bypass. The
+`curl` User-Agent override is a compatibility measure, not a security fix.
+
 ### Check results
 
 ```bash
