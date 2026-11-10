@@ -138,7 +138,7 @@ An economically distinct mechanism (e.g. volatility-expansion confirmation) may 
 - PR #9 `fix/m4-llm-provider-diagnostics` is merged to main, and the read-only/synthetic `ata shadow probe-llm` command has been run on the Ubuntu server. It returned **`LLM_PROVIDER_HTTP_403`** via the original `/chat/completions` endpoint, without writing any forecasts.
 - The operator independently reports a successful `POST /v1/responses` request to the same proxy with the intended model. This strongly suggests an API-route compatibility issue. It does **not** conclusively identify why `/chat/completions` returned 403.
 - Operator read-only SQL verifies that the 2026-11-10 Baseline forecast was recorded at **00:15:09 UTC** (`fixed_usdt_p50_v1`); no first-day LLM forecast was saved. The Baseline remains valid and immutable.
-- PR #10 (`fix/m4-responses-api-compat`) implements explicit `ATA_LLM_API_STYLE=responses` opt-in, preserving the default Chat Completions path. GitHub Actions #213 passed Ruff lint/format, installer/CLI checks and **111 pytest tests**. It is still pending human merge and the real Ubuntu `probe-llm` verification.
+- PR #10 (`fix/m4-responses-api-compat`) is **merged to main** (2026-11-10); the explicit `ATA_LLM_API_STYLE=responses` adapter passed **111 tests**. The operator reports a **second real Ubuntu `probe-llm` result of HTTP 403** even after merge/configuration. Current evidence does not establish whether the running systemd process truly selected `/v1/responses`, whether its credential/model matches the successful manual curl, or whether the provider rejects the extra payload fields/headers. Do **not** implement another API redesign without first checking effective runtime configuration and sending one minimal request using the same service environment.
 - After the fixed UTC 00:05–00:45 issuance window, **do not backdate** a missed LLM forecast. First eligible next-day forecast is 2026-11-11 00:15 UTC (08:15 UTC+8).
 - Operational acceptance remains pending: verify the baseline record, diagnose the provider, obtain a true future LLM observation, then confirm delayed 24h feedback. Reaching 60 days warrants review, not promotion.
 
@@ -152,10 +152,10 @@ The approved engineering experiment starts with one research model. Stop or disa
 
 ## 11. Next actions
 
-1. Review/merge `fix/m4-responses-api-compat` after CI; reinstall the Ubuntu service using updated main.
-2. In the existing root-owned `/etc/ata/shadow.env`, add `ATA_LLM_API_STYLE=responses`, keeping the existing verified HTTPS base URL and model. Never share the API key.
-3. Use the existing `systemd-run ... ata shadow probe-llm` command once, confirm safe `PASS` or a new sanitized error category; the probe does not write forecasts or backdate events.
-4. On 2026-11-11 00:15 UTC verify a new actual LLM forecast; after 01:05 UTC verify the 2026-11-10 Baseline feedback. Do not fabricate missing forecasts.
+1. Check effective LLM API style, endpoint path and model ID inside the real systemd-run EnvironmentFile context; print no secrets.
+2. If effective style is `responses`, compare ONE minimal `model`+`input: hello` request using that same service environment with the operator's previously successful curl. Record safe HTTP status only. Consider HTTP client headers, token/model mismatch, and extra `max_output_tokens`/system prompt as possible differentiators rather than guessing.
+3. Fix only the evidenced provider integration problem; stop recurring LLM calls if unresolved to avoid repeated errors/cost. Keep baseline collector running.
+4. Preserve 2026-11-10 Baseline; do not backdate missed LLM predictions. Verify next-day baseline settlement separately.
 5. Preserve H001's sealed holdout and all three permissions: trading=false, account_simulation=false, ticket_generation=false.
 
 ## 12. Stop conditions
