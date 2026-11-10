@@ -61,9 +61,7 @@ def test_full_completions_url_is_rejected_before_request(monkeypatch) -> None:
         LLMSettings.from_environment()
 
 
-def test_provider_probe_uses_no_database_or_market_history(
-    monkeypatch, tmp_path, capsys
-) -> None:
+def test_provider_probe_uses_no_database_or_market_history(monkeypatch, tmp_path, capsys) -> None:
     captured = []
 
     def fake_forecast(snapshot, config):
