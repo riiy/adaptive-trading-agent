@@ -141,8 +141,10 @@ An economically distinct mechanism (e.g. volatility-expansion confirmation) may 
 - PR #10 (`fix/m4-responses-api-compat`) is **merged to main** (2026-11-10); the explicit `ATA_LLM_API_STYLE=responses` adapter passed **111 tests**. The operator reports a **second real Ubuntu `probe-llm` result of HTTP 403** even after merge/configuration. Current evidence does not establish whether the running systemd process truly selected `/v1/responses`, whether its credential/model matches the successful manual curl, or whether the provider rejects the extra payload fields/headers. Do **not** implement another API redesign without first checking effective runtime configuration and sending one minimal request using the same service environment.
 - After the fixed UTC 00:05–00:45 issuance window, **do not backdate** a missed LLM forecast. First eligible next-day forecast is 2026-11-11 00:15 UTC (08:15 UTC+8).
 - The operator reproduced a decisive **User-Agent-dependent edge filter**: exact same Python minimal `/v1/responses` request normally returned HTTP 403 with **no Nginx request log**, but with `User-Agent: curl/8.5.0` returned **HTTP 200** and appeared in Nginx logs. This is evidence of filtering upstream of the logged Nginx access point; the exact filtering component is not yet identified.
-- PR #11 (`fix/m4-llm-user-agent-compat`) introduces opt-in, validated `ATA_LLM_USER_AGENT`; default transport/strategy/permissions remain unchanged. CI passed **119 pytest tests**, Ruff lint/format, installer syntax and CLI. This temporary compatibility workaround awaits merge and a real, non-mutating Ubuntu provider probe; later create a narrow edge allow rule rather than disabling WAF broadly.
-- Operational acceptance remains pending: merge/test the UA compatibility patch, run **one non-mutating provider probe**, then collect the first valid future LLM forecast and 24h feedback. Reaching 60 days warrants review, not promotion.
+- PR #11 (`fix/m4-llm-user-agent-compat`) is **merged to main** (2026-11-10); opt-in, validated `ATA_LLM_USER_AGENT` passed **119 tests**, Ruff lint/format, installer syntax and CLI. Operator configured the UA workaround on Ubuntu.
+- Two consecutive non-mutating operator `ata shadow probe-llm` runs after PR #11: first **`LLM_PROVIDER_TIMEOUT`** (failed), second **`PASS` / `COMPATIBLE_RESPONSE`** (succeeded in 7.825s). This verifies a full real provider request and structured response **at least once**, not unattended service reliability, a stored LLM forecast, or predictive advantage. Neither probe wrote SQLite.
+- An intermittent timeout remains a potential operational issue; **do not optimize the timeout or add retries after one incident**. Check the next few genuine scheduled observations first. Continue baseline-only collection if LLM requests continue to fail; no backfilling.
+- Operational acceptance remains pending: first actual future-dated LLM forecast (earliest next UTC 00:15) and its delayed feedback. Reaching 60 prospective days warrants review, not promotion. Longer term, replace curl User-Agent compatibility with a narrow edge security rule rather than disabling WAF broadly.
 
 The approved engineering experiment starts with one research model. Stop or disable daily LLM usage if it does not demonstrate decision-relevant value after sufficient prospective evidence; preserve a low-cost deterministic pipeline.
 
@@ -154,11 +156,11 @@ The approved engineering experiment starts with one research model. Stop or disa
 
 ## 11. Next actions
 
-1. Merge the narrow opt-in User-Agent patch after CI and reinstall the Ubuntu application; set `ATA_LLM_USER_AGENT=curl/8.5.0` in root-owned `/etc/ata/shadow.env` for the proved temporary compatibility path.
-2. Run the existing one-call `ata shadow probe-llm` through systemd to verify the full Responses request and structured forecast parsing **without writing a forecast**. If it still fails, diagnose only the new evidenced failure; do not guess.
-3. Verify the next true UTC 00:15 prospective observation and subsequent 24h settlement; preserve the first day's missing LLM record as missing, never fabricated.
-4. Inspect the filtering layer before Nginx and replace User-Agent mimicry with a narrowly scoped ATA research-client allowance. Never globally disable WAF/bot protection.
-5. Preserve 2026-11-10 Baseline, H001's sealed holdout, and all three permissions: trading=false, account_simulation=false, ticket_generation=false.
+1. **Stop development changes for now.** At the next scheduled UTC 00:15 observer invocation (2026-11-11 08:15 UTC+8), verify whether both baseline and LLM were actually stored; `shadow score` alone cannot show pending forecasts.
+2. At the UTC 01:05 settle invocation (2026-11-11 09:05 UTC+8), confirm whether the 2026-11-10 baseline was settled. A 2026-11-11 LLM forecast cannot settle until 2026-11-12.
+3. Observe a small run of unattended LLM invocations; do not adjust timeouts or add retries unless real repeated timeouts threaten the prospective evidence stream. Keep market data and baseline independent of LLM uptime.
+4. Later, inspect the edge filtering before Nginx and replace User-Agent impersonation with a narrowly scoped rule; do not disable WAF broadly.
+5. Preserve the missing 2026-11-10 LLM forecast as missing, H001's sealed holdout, and trading/account-simulation/ticket-generation permissions all false.
 
 ## 12. Stop conditions
 
