@@ -43,17 +43,22 @@ class LLMSettings:
     model: str
     api_key: str
     timeout_seconds: float = 20.0
+    api_style: str = "chat_completions"
 
     @classmethod
     def from_environment(cls) -> "LLMSettings":
         base = os.getenv("ATA_LLM_BASE_URL", "").rstrip("/")
         key = os.getenv("ATA_LLM_API_KEY", "")
         model = os.getenv("ATA_LLM_MODEL", "")
+        api_style = os.getenv("ATA_LLM_API_STYLE", "chat_completions").strip()
         if not base or not key or not model:
             raise ValueError("LLM disabled: ATA_LLM_BASE_URL, ATA_LLM_MODEL and API key required")
-        if base.endswith("/chat/completions"):
-            raise ValueError("ATA_LLM_BASE_URL must be the API base, without /chat/completions")
-        return cls(url=base + "/chat/completions", model=model, api_key=key)
+        if api_style not in ("chat_completions", "responses"):
+            raise ValueError("ATA_LLM_API_STYLE must be chat_completions or responses")
+        if base.endswith(("/chat/completions", "/responses")):
+            raise ValueError("ATA_LLM_BASE_URL must be the API base, without endpoint suffix")
+        suffix = "/responses" if api_style == "responses" else "/chat/completions"
+        return cls(url=base + suffix, model=model, api_key=key, api_style=api_style)
 
     def __post_init__(self) -> None:
         parts = urlsplit(self.url)
@@ -68,6 +73,59 @@ class LLMSettings:
             raise ValueError("LLM endpoint must be a clean HTTPS URL")
         if not self.model or not self.api_key or not 0 < self.timeout_seconds <= 30:
             raise ValueError("invalid LLM model, credential or timeout")
+        if self.api_style not in ("chat_completions", "responses"):
+            raise ValueError("invalid LLM API style")
+        expected_suffix = "/responses" if self.api_style == "responses" else "/chat/completions"
+        if not parts.path.endswith(expected_suffix):
+            raise ValueError("LLM endpoint and API style do not match")
+
+
+def _response_text(payload: object, *, api_style: str) -> str:
+    """Extract only assistant text, never provider tool/reasoning records."""
+    if not isinstance(payload, dict):
+        raise ValueError("LLM returned an invalid structured forecast")
+
+    if api_style == "responses":
+        if payload.get("status") not in (None, "completed"):
+            raise ValueError("LLM response incomplete; no forecast accepted")
+
+        text_parts: list[str] = []
+        output = payload.get("output")
+        if isinstance(output, list):
+            for item in output:
+                if not isinstance(item, dict):
+                    continue
+                if item.get("type") != "message" or item.get("role") != "assistant":
+                    continue
+                blocks = item.get("content")
+                if not isinstance(blocks, list):
+                    continue
+                for block in blocks:
+                    if (
+                        isinstance(block, dict)
+                        and block.get("type") == "output_text"
+                        and isinstance(block.get("text"), str)
+                    ):
+                        text_parts.append(block["text"])
+
+        if text_parts:
+            return "".join(text_parts)
+        # Some compatible gateways expose an SDK-like top-level convenience field.
+        flat = payload.get("output_text")
+        if isinstance(flat, str) and flat:
+            return flat
+        raise ValueError("LLM returned no assistant output_text")
+
+    choices = payload.get("choices")
+    if not isinstance(choices, list) or len(choices) != 1:
+        raise ValueError("LLM returned an invalid structured forecast")
+    choice = choices[0]
+    if not isinstance(choice, dict):
+        raise ValueError("LLM returned an invalid structured forecast")
+    message = choice.get("message")
+    if not isinstance(message, dict) or not isinstance(message.get("content"), str):
+        raise ValueError("LLM returned an invalid structured forecast")
+    return message["content"]
 
 
 def forecast_with_llm(
@@ -76,25 +134,32 @@ def forecast_with_llm(
     *,
     opener: Any = _open_without_redirects,
 ) -> ShadowForecast:
-    """One bounded, non-retried OpenAI-compatible chat completion request."""
-    body = canonical_json(
-        {
+    """Call one selected HTTPS API endpoint without tools, retries or database writes."""
+    context = "Data available at decision time (closed candles only): " + canonical_json(snapshot)
+    if settings.api_style == "responses":
+        # Responses models may not support chat-specific temperature/max_tokens.
+        request_payload = {
+            "model": settings.model,
+            "input": [
+                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "user", "content": context},
+            ],
+            "max_output_tokens": 512,
+        }
+    else:
+        request_payload = {
             "model": settings.model,
             "temperature": 0,
             "max_tokens": 240,
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {
-                    "role": "user",
-                    "content": "Data available at decision time (closed candles only): "
-                    + canonical_json(snapshot),
-                },
+                {"role": "user", "content": context},
             ],
         }
-    ).encode("utf-8")
+
     request = Request(
         settings.url,
-        data=body,
+        data=canonical_json(request_payload).encode("utf-8"),
         method="POST",
         headers={
             "Content-Type": "application/json",
@@ -107,8 +172,7 @@ def forecast_with_llm(
             if len(data) > 32_768:
                 raise ValueError("LLM response exceeds maximum size")
     except HTTPError as error:
-        # Expose ONLY the numeric HTTP status, not headers, response bodies,
-        # URLs, or the original exception (which may include credentials).
+        # Expose ONLY numeric HTTP status, never headers/body/URL/exception reason.
         status = error.code if isinstance(error.code, int) and 100 <= error.code <= 599 else 0
         raise ValueError(f"LLM_PROVIDER_HTTP_{status}; no forecast accepted") from None
     except TimeoutError:
@@ -117,11 +181,13 @@ def forecast_with_llm(
         raise ValueError("LLM_PROVIDER_NETWORK_ERROR; no forecast accepted") from None
 
     try:
-        response_object = json.loads(data)
-        choices = response_object["choices"]
-        if not isinstance(choices, list) or len(choices) != 1:
-            raise ValueError("expected exactly one completion")
-        content = choices[0]["message"]["content"]
-        return ShadowForecast.from_payload(json.loads(content))
-    except (KeyError, TypeError, IndexError, json.JSONDecodeError):
-        raise ValueError("LLM returned an invalid structured forecast") from None
+        payload = json.loads(data)
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        raise ValueError("LLM returned invalid JSON") from None
+
+    message = _response_text(payload, api_style=settings.api_style)
+    try:
+        forecast_payload = json.loads(message)
+    except json.JSONDecodeError:
+        raise ValueError("LLM assistant text is not a JSON forecast") from None
+    return ShadowForecast.from_payload(forecast_payload)
