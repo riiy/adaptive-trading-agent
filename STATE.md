@@ -138,7 +138,7 @@ An economically distinct mechanism (e.g. volatility-expansion confirmation) may 
 - PR #9 `fix/m4-llm-provider-diagnostics` is merged to main, and the read-only/synthetic `ata shadow probe-llm` command has been run on the Ubuntu server. It returned **`LLM_PROVIDER_HTTP_403`** via the original `/chat/completions` endpoint, without writing any forecasts.
 - The operator independently reports a successful `POST /v1/responses` request to the same proxy with the intended model. This strongly suggests an API-route compatibility issue. It does **not** conclusively identify why `/chat/completions` returned 403.
 - Operator read-only SQL verifies that the 2026-11-10 Baseline forecast was recorded at **00:15:09 UTC** (`fixed_usdt_p50_v1`); no first-day LLM forecast was saved. The Baseline remains valid and immutable.
-- A minimal `fix/m4-responses-api-compat` PR implements explicit `ATA_LLM_API_STYLE=responses` opt-in, preserving the default Chat Completions path. Tests/CI and server-side provider probe remain the next acceptance checks.
+- PR #10 (`fix/m4-responses-api-compat`) implements explicit `ATA_LLM_API_STYLE=responses` opt-in, preserving the default Chat Completions path. GitHub Actions #213 passed Ruff lint/format, installer/CLI checks and **111 pytest tests**. It is still pending human merge and the real Ubuntu `probe-llm` verification.
 - After the fixed UTC 00:05–00:45 issuance window, **do not backdate** a missed LLM forecast. First eligible next-day forecast is 2026-11-11 00:15 UTC (08:15 UTC+8).
 - Operational acceptance remains pending: verify the baseline record, diagnose the provider, obtain a true future LLM observation, then confirm delayed 24h feedback. Reaching 60 days warrants review, not promotion.
 
