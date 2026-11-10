@@ -63,9 +63,7 @@ def test_invalid_api_style_rejected(monkeypatch, value):
         LLMSettings.from_environment()
 
 
-@pytest.mark.parametrize(
-    "suffix", ["/responses", "/chat/completions"]
-)
+@pytest.mark.parametrize("suffix", ["/responses", "/chat/completions"])
 def test_base_url_must_not_include_endpoint(monkeypatch, suffix):
     monkeypatch.setenv("ATA_LLM_BASE_URL", "https://proxy.example/v1" + suffix)
     monkeypatch.setenv("ATA_LLM_MODEL", "m")
@@ -89,9 +87,7 @@ def test_responses_request_and_structured_output():
                     {
                         "type": "message",
                         "role": "assistant",
-                        "content": [
-                            {"type": "output_text", "text": json.dumps(FORECAST_JSON)}
-                        ],
+                        "content": [{"type": "output_text", "text": json.dumps(FORECAST_JSON)}],
                     },
                 ],
             }
@@ -128,9 +124,7 @@ def test_responses_output_text_gateway_fallback():
     forecast = forecast_with_llm(
         {"scope": "TEST"},
         config,
-        opener=lambda *_args, **_kwargs: FakeResponse(
-            {"output_text": json.dumps(FORECAST_JSON)}
-        ),
+        opener=lambda *_args, **_kwargs: FakeResponse({"output_text": json.dumps(FORECAST_JSON)}),
     )
     assert forecast.reason_code == "NO_MARKET_DATA"
 
