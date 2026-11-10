@@ -53,6 +53,7 @@ def test_opt_in_user_agent_used_for_responses_requests(monkeypatch):
 
 def test_default_behavior_has_no_explicit_user_agent(monkeypatch):
     monkeypatch.setenv("ATA_LLM_BASE_URL", "https://proxy.example/v1")
+    monkeypatch.setenv("ATA_LLM_API_STYLE", "responses")
     monkeypatch.setenv("ATA_LLM_MODEL", "mock-model")
     monkeypatch.setenv("ATA_LLM_API_KEY", "private-token")
     monkeypatch.delenv("ATA_LLM_USER_AGENT", raising=False)
