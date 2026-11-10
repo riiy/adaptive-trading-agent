@@ -167,6 +167,41 @@ If the first day's 00:05–00:45 UTC issue window has passed, **do not**
 rerun `ata shadow observe` with a forged clock or backfill an LLM forecast.
 Record a missing LLM observation. The next eligible day remains at 00:15 UTC.
 
+### Responses-only providers (M4 protocol compatibility)
+
+The first Ubuntu observation on **2026-11-10 00:15 UTC** preserved the
+deterministic baseline but the LLM adapter's `/chat/completions` call returned
+HTTP 403. The operator separately demonstrated that their provider and model
+accept `POST /v1/responses` using the Responses `model` / `input` shape.
+This indicates **API route compatibility is a strong suspect**, not that the
+LLM key or account has been proved invalid.
+
+The M4 LLM adapter now has an **explicit**, fail-closed choice:
+
+- `ATA_LLM_API_STYLE=chat_completions` (default; original behavior)
+- `ATA_LLM_API_STYLE=responses` (uses `/responses`, `input`, and parses
+  the returned assistant `output_text` blocks)
+
+In the root-owned server file `/etc/ata/shadow.env`, retain the valid existing
+`ATA_LLM_BASE_URL`, `ATA_LLM_MODEL`, and `ATA_LLM_API_KEY`, then add:
+
+```ini
+ATA_LLM_API_STYLE=responses
+```
+
+The base URL should end in the API prefix (for this operator, `/v1`), not in
+`/responses` or `/chat/completions`. The adapter constructs the endpoint.
+
+After this PR is merged, update the installation, then run the existing
+**non-mutating** provider probe via `systemd-run` as documented below.
+The test sends a **synthetic, non-market** request and may consume tokens.
+The observer and LLM adapter do not automatically retry or switch protocols:
+a failed response leaves a real missing-forecast day for audit.
+
+The Responses implementation uses strict JSON validation and does **not**
+accept tool-call output, reasoning text, incomplete results, or extra forecast
+fields as valid shadow forecasts. This is not evidence of investment quality.
+
 ### Check results
 
 ```bash
