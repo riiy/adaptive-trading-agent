@@ -1,6 +1,6 @@
 # Adaptive Trading Agent — STATE.md
 
-**Last updated:** 2026-11-09  
+**Last updated:** 2026-11-10  
 **Project phase:** M4_SHADOW_RESEARCH_BUILD  
 **System mode:** RESEARCH_ONLY  
 **Live trading:** Prohibited
@@ -132,7 +132,11 @@ An economically distinct mechanism (e.g. volatility-expansion confirmation) may 
 - **No executable entries, transaction cost model, real/Paper orders, parameter tuning or automatic strategy promotion.**
 - PR #8 is **merged to main** (2026-11-09). GitHub CI passed 85 pytest tests, Ruff lint/format, Ubuntu install-script syntax, and shadow CLI checks.
 - Operator reports `/etc/ata/shadow.env` has been configured. The `ata shadow score` command ran successfully against `/var/lib/ata/shadow.sqlite3`, but reports 0 settled observations for both baseline and LLM. This is expected before the first allowed prospective forecast; it does **not** verify that systemd loaded the LLM environment or that a forecast has run.
-- First permissible observation: 2026-11-10 00:00 UTC; scheduled service at 00:15 UTC (08:15 UTC+8). Operational acceptance remains pending: timer activation, first baseline+LLM forecast, then delayed next-day feedback. Reaching 60 days warrants review, not promotion.
+- 2026-11-10 00:15 UTC (08:15 UTC+8): the Ubuntu `ata-shadow-observe.service` timer triggered as scheduled but exited code 2 after `LLM provider request failed; no forecast accepted`. This verifies timer invocation, **not** a successful LLM observation.
+- The daily `ata shadow score` check reports `settled_days=0` for both sources, which only counts completed 24-hour feedback and does **not** prove `shadow_forecasts` is empty. Code writes baseline before requesting LLM, so baseline **may** have been saved; confirm by read-only SQL before making any conclusions.
+- After the UTC 00:05–00:45 issuance window, **do not backdate** a missed LLM forecast. Keep any actual baseline record and mark the LLM gap as a genuine provider failure.
+- A targeted `fix/m4-llm-provider-diagnostics` PR adds sanitized HTTP status codes and a one-shot `ata shadow probe-llm` command which makes a separate API request without creating forecasts. CI and deployment verification are pending. First valid retry for a **new** daily forecast is 2026-11-11 00:15 UTC.
+- Operational acceptance remains pending: verify the baseline record, diagnose the provider, obtain a true future LLM observation, then confirm delayed 24h feedback. Reaching 60 days warrants review, not promotion.
 
 The approved engineering experiment starts with one research model. Stop or disable daily LLM usage if it does not demonstrate decision-relevant value after sufficient prospective evidence; preserve a low-cost deterministic pipeline.
 
@@ -144,10 +148,10 @@ The approved engineering experiment starts with one research model. Stop or disa
 
 ## 11. Next actions
 
-1. Verify `ata-shadow-observe.timer` and `ata-shadow-settle.timer` are enabled and scheduled; inspect service unit's `EnvironmentFile` reference to `/etc/ata/shadow.env`.
-2. On 2026-11-10 00:15 UTC (08:15 UTC+8), verify the first genuine prospective observation records both deterministic baseline and opted-in LLM. Confirm snapshot hash, timestamp, model/prompt version, and sanitized provider result.
-3. On/after 2026-11-11 01:05 UTC (09:05 UTC+8), verify 24h feedback settlement, then run `ata shadow score`.
-4. Compare LLM calibration and selection quality with the registered static baseline after sufficient prospective observations; disable low-value calls instead of adding agents.
+1. Query `shadow_forecasts` read-only to confirm whether the first-day baseline was persisted; `shadow score` alone cannot answer this.
+2. Review/merge the safe M4 provider-diagnostics PR. Run `ata shadow probe-llm` once under systemd with `EnvironmentFile=/etc/ata/shadow.env`; capture sanitized status only.
+3. Fix **only** the evidenced provider issue (URL, token, model, HTTP compatibility, rate limits or network), without changing the M4 forecasting rule or backdating 2026-11-10 forecasts.
+4. On/after 2026-11-11 01:05 UTC, verify the saved 2026-11-10 baseline's 24h feedback; separately confirm the next eligible UTC 00:15 observation records an LLM forecast.
 5. Preserve H001's sealed holdout and all three permissions: trading=false, account_simulation=false, ticket_generation=false.
 
 ## 12. Stop conditions

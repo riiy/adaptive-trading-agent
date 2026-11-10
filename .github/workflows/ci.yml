@@ -46,6 +46,7 @@ jobs:
           ata shadow observe --help
           ata shadow settle --help
           ata shadow score --help
+          ata shadow probe-llm --help
 
       - name: Run tests
         run: pytest -q

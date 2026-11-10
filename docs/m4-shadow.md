@@ -99,6 +99,74 @@ Do not activate LLM until connectivity and billing controls are checked.
 Provider failure leaves the deterministic baseline intact; no fabricated LLM
 forecast is recorded. An unsuccessful LLM call can still consume tokens.
 
+### Investigate an LLM provider failure (no forecast backfill)
+
+On 2026-11-10 00:15 UTC, the first scheduled observer started but exited after
+`LLM provider request failed`. In the current implementation, the baseline is
+written **before** the optional LLM call. A nonzero service exit does not
+necessarily mean the baseline forecast is missing. `ata shadow score`
+reports **settled feedback only**, not the count of pending forecasts.
+
+To inspect the existing records (only safe metadata, no API keys or raw responses):
+
+```bash
+sudo -u ata /opt/ata/venv/bin/python - <<'PY'
+import sqlite3
+
+db = sqlite3.connect("file:/var/lib/ata/shadow.sqlite3?mode=ro", uri=True)
+for day_ms, source, created_ms, model in db.execute(
+    "SELECT day_ms, source, created_ms, model_id "
+    "FROM shadow_forecasts ORDER BY day_ms, source"
+):
+    print(day_ms, source, created_ms, model)
+db.close()
+PY
+```
+
+The LLM client deliberately suppresses remote error bodies/headers/URLs because
+they may contain API tokens. New diagnostics show **only** a safe numeric HTTP
+status (e.g. `LLM_PROVIDER_HTTP_401`, `HTTP_404`, `HTTP_429`) or the
+`LLM_PROVIDER_NETWORK_ERROR` / `LLM_PROVIDER_TIMEOUT` categories.
+
+After this PR has merged and the Ubuntu installation is updated, use the
+following **separate, non-mutating provider probe**. It makes **one paid API
+request**, loads `/etc/ata/shadow.env` through systemd as the real
+`ata` user, and does **not** create a forecast or affect SQLite:
+
+```bash
+sudo systemd-run --unit=ata-llm-probe --wait --pipe --collect \
+  --uid=ata \
+  --property=EnvironmentFile=/etc/ata/shadow.env \
+  /opt/ata/venv/bin/ata shadow probe-llm
+```
+
+Do not paste the environment file, bearer token, request body, HTTP response body,
+or credentials into logs, shell commands or support messages.
+
+Interpretation of sanitized errors:
+
+| Result | First check |
+|---|---|
+| `LLM_PROVIDER_HTTP_400` | Provider/model compatibility; request parameter support (e.g. temperature, token limit) |
+| `LLM_PROVIDER_HTTP_401` | API key / account authorization |
+| `LLM_PROVIDER_HTTP_403` | Access policy, region, provider account/organization permissions |
+| `LLM_PROVIDER_HTTP_404` | Base URL must be an API prefix such as `https://host/v1`, **not** the full `/chat/completions` endpoint; also check model ID |
+| `LLM_PROVIDER_HTTP_429` | Rate limits, quota or billing restrictions |
+| `LLM_PROVIDER_HTTP_5xx` | Provider-side transient outage |
+| `LLM_PROVIDER_NETWORK_ERROR` | DNS, TLS, proxy, firewall, server egress |
+| `LLM_PROVIDER_TIMEOUT` | Connection/response exceeded the bounded timeout |
+| `LLM returned an invalid structured forecast` | Response format is incompatible with the strict Chat Completions schema |
+
+The command prints only a sanitized success/error result. In particular,
+`ATA_LLM_BASE_URL` must be the **base** URL: the adapter adds
+`/chat/completions`. The active systemd service reads the root-owned
+environment file; running `sudo -u ata ata ...` manually will **not**
+automatically load the file.
+
+If the first day's 00:05–00:45 UTC issue window has passed, **do not**
+rerun `ata shadow observe` with a forged clock or backfill an LLM forecast.
+Record a missing LLM observation. The next eligible day remains at 00:15 UTC.
+
 ### Check results
 
 ```bash
