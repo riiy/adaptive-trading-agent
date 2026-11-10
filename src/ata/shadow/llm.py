@@ -44,6 +44,7 @@ class LLMSettings:
     api_key: str
     timeout_seconds: float = 20.0
     api_style: str = "chat_completions"
+    user_agent: str | None = None
 
     @classmethod
     def from_environment(cls) -> "LLMSettings":
@@ -51,6 +52,7 @@ class LLMSettings:
         key = os.getenv("ATA_LLM_API_KEY", "")
         model = os.getenv("ATA_LLM_MODEL", "")
         api_style = os.getenv("ATA_LLM_API_STYLE", "chat_completions").strip()
+        user_agent = os.getenv("ATA_LLM_USER_AGENT") or None
         if not base or not key or not model:
             raise ValueError("LLM disabled: ATA_LLM_BASE_URL, ATA_LLM_MODEL and API key required")
         if api_style not in ("chat_completions", "responses"):
@@ -58,7 +60,13 @@ class LLMSettings:
         if base.endswith(("/chat/completions", "/responses")):
             raise ValueError("ATA_LLM_BASE_URL must be the API base, without endpoint suffix")
         suffix = "/responses" if api_style == "responses" else "/chat/completions"
-        return cls(url=base + suffix, model=model, api_key=key, api_style=api_style)
+        return cls(
+            url=base + suffix,
+            model=model,
+            api_key=key,
+            api_style=api_style,
+            user_agent=user_agent,
+        )
 
     def __post_init__(self) -> None:
         parts = urlsplit(self.url)
@@ -78,6 +86,14 @@ class LLMSettings:
         expected_suffix = "/responses" if self.api_style == "responses" else "/chat/completions"
         if not parts.path.endswith(expected_suffix):
             raise ValueError("LLM endpoint and API style do not match")
+        # A User-Agent can be opted in for restrictive trusted reverse proxies.
+        # Never allow CR/LF or any other control characters into HTTP headers.
+        if self.user_agent is not None and (
+            not 1 <= len(self.user_agent) <= 128
+            or not self.user_agent.isascii()
+            or any(not 32 <= ord(character) <= 126 for character in self.user_agent)
+        ):
+            raise ValueError("ATA_LLM_USER_AGENT must be printable ASCII (1-128 characters)")
 
 
 def _response_text(payload: object, *, api_style: str) -> str:
@@ -157,14 +173,17 @@ def forecast_with_llm(
             ],
         }
 
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {settings.api_key}",
+    }
+    if settings.user_agent is not None:
+        headers["User-Agent"] = settings.user_agent
     request = Request(
         settings.url,
         data=canonical_json(request_payload).encode("utf-8"),
         method="POST",
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {settings.api_key}",
-        },
+        headers=headers,
     )
     try:
         with opener(request, timeout=settings.timeout_seconds) as response:
