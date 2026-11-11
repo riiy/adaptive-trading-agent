@@ -1,7 +1,7 @@
 # Adaptive Trading Agent — STATE.md
 
-**Last updated:** 2026-11-10  
-**Project phase:** M4_SHADOW_RESEARCH_BUILD  
+**Last updated:** 2026-11-11  
+**Project phase:** M4_PROSPECTIVE_COLLECTION  
 **System mode:** RESEARCH_ONLY  
 **Live trading:** Prohibited
 
@@ -28,7 +28,7 @@ Build a reproducible, risk-governed decision system that can determine whether a
 ## 3. Permission state
 
 ```yaml
-project_phase: M4_SHADOW_RESEARCH_BUILD
+project_phase: M4_PROSPECTIVE_COLLECTION
 system_mode: RESEARCH_ONLY
 trading_allowed: false
 account_simulation_allowed: false
@@ -144,7 +144,10 @@ An economically distinct mechanism (e.g. volatility-expansion confirmation) may 
 - PR #11 (`fix/m4-llm-user-agent-compat`) is **merged to main** (2026-11-10); opt-in, validated `ATA_LLM_USER_AGENT` passed **119 tests**, Ruff lint/format, installer syntax and CLI. Operator configured the UA workaround on Ubuntu.
 - Two consecutive non-mutating operator `ata shadow probe-llm` runs after PR #11: first **`LLM_PROVIDER_TIMEOUT`** (failed), second **`PASS` / `COMPATIBLE_RESPONSE`** (succeeded in 7.825s). This verifies a full real provider request and structured response **at least once**, not unattended service reliability, a stored LLM forecast, or predictive advantage. Neither probe wrote SQLite.
 - An intermittent timeout remains a potential operational issue; **do not optimize the timeout or add retries after one incident**. Check the next few genuine scheduled observations first. Continue baseline-only collection if LLM requests continue to fail; no backfilling.
-- Operational acceptance remains pending: first actual future-dated LLM forecast (earliest next UTC 00:15) and its delayed feedback. Reaching 60 prospective days warrants review, not promotion. Longer term, replace curl User-Agent compatibility with a narrow edge security rule rather than disabling WAF broadly.
+- **2026-11-11 first production prospective observation passed**: Ubuntu `ata-shadow-observe.service` ran unattended at 00:15:06–00:15:11 UTC and returned `RECORDED` with `sources_recorded=[baseline,llm]`, `llm_enabled=true`, `execution_allowed=false`. Model for LLM source: `chatgpt/gpt-6.1-sol`. The frozen snapshot hash was `622a569240d9bc26f7280e2475bc7c4b3df0dc116c0afc67b62343e73df85e98`. Read-only SQL shows `COUNT(*)=2`, `COUNT(DISTINCT snapshot_hash)=1` on decision day 2026-11-11 UTC; therefore both saved forecasts used the same snapshot.
+- **2026-11-11 first real baseline feedback settlement passed**: at 01:05:00 UTC `ata-shadow-settle.service` returned `SETTLEMENT_PASS`, `newly_settled=1`, `still_pending=2`, `execution_allowed=false`. `ata shadow score` now reports `baseline.settled_days=1` and `llm.settled_days=0`. The 2026-11-10 baseline was always cash with gross selected return 0%; observed same-day reference BTC -2.086219%, ETH -3.841723%; baseline Brier BTC/ETH is 0.25 by construction, **not evidence of an edge**.
+- **M4 operational gates**: `M4_SHADOW_OBSERVATION_ACCEPTED` (one real unattended successful LLM + baseline issuance), `M4_BASELINE_FEEDBACK_ACCEPTED` (one real 24h settle and score), `M4_LLM_FEEDBACK_PENDING` (11 Nov LLM record cannot settle before 2026-11-12 01:05 UTC). Continue prospective collection; no automatic strategy promotion or extra infrastructure work. First-day 2026-11-10 LLM record remains genuinely missing and must not be backfilled. The 60-day statistical review is not a trading pass condition.
+- Long-term, replace curl User-Agent compatibility with a narrow edge security rule rather than disabling WAF broadly.
 
 The approved engineering experiment starts with one research model. Stop or disable daily LLM usage if it does not demonstrate decision-relevant value after sufficient prospective evidence; preserve a low-cost deterministic pipeline.
 
@@ -156,11 +159,11 @@ The approved engineering experiment starts with one research model. Stop or disa
 
 ## 11. Next actions
 
-1. **Stop development changes for now.** At the next scheduled UTC 00:15 observer invocation (2026-11-11 08:15 UTC+8), verify whether both baseline and LLM were actually stored; `shadow score` alone cannot show pending forecasts.
-2. At the UTC 01:05 settle invocation (2026-11-11 09:05 UTC+8), confirm whether the 2026-11-10 baseline was settled. A 2026-11-11 LLM forecast cannot settle until 2026-11-12.
-3. Observe a small run of unattended LLM invocations; do not adjust timeouts or add retries unless real repeated timeouts threaten the prospective evidence stream. Keep market data and baseline independent of LLM uptime.
-4. Later, inspect the edge filtering before Nginx and replace User-Agent impersonation with a narrowly scoped rule; do not disable WAF broadly.
-5. Preserve the missing 2026-11-10 LLM forecast as missing, H001's sealed holdout, and trading/account-simulation/ticket-generation permissions all false.
+1. **No further code changes now.** At 2026-11-12 01:05 UTC (09:05 UTC+8), inspect `ata-shadow-settle.service` and `ata shadow score` for the first true 2026-11-11 LLM feedback, and verify baseline settlement for the same decision day.
+2. Confirm that the 2026-11-11 LLM and baseline records are both present, share an unchanged frozen snapshot hash, and are not duplicates; this was already observed in the first day's read-only SQL and should remain stable.
+3. Monitor a few subsequent automatic daily runs for provider timeout/missingness without prompt tuning, extra retries, or altered decision times. If reliable, transition to low-touch prospective data collection.
+4. Later, inspect upstream edge filtering and replace curl User-Agent mimicry with a narrowly scoped allow rule; no blanket WAF disablement.
+5. Preserve 2026-11-10 missing LLM forecast as missing, H001's sealed holdout, and all three permissions: trading=false, account_simulation=false, ticket_generation=false.
 
 ## 12. Stop conditions
 
