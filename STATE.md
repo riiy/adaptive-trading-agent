@@ -1,6 +1,6 @@
 # Adaptive Trading Agent — STATE.md
 
-**Last updated:** 2026-11-16  
+**Last updated:** 2026-11-18  
 **Project phase:** M4_PROSPECTIVE_COLLECTION  
 **System mode:** RESEARCH_ONLY  
 **Live trading:** Prohibited
@@ -151,6 +151,8 @@ An economically distinct mechanism (e.g. volatility-expansion confirmation) may 
 - **2026-11-16 five-day prospective checkpoint:** Operator reports 2026-11-12 to 2026-11-16 (UTC+8) scheduled settlements each returned `SETTLEMENT_PASS`, `newly_settled=2`, `still_pending=2`. Baseline `settled_days=6` (Nov 10–15), LLM `settled_days=5` (Nov 11–15), **`abstained_days=5`**, `choice_days_excluding_abstentions=0`.
 - LLM five-day mean Brier BTC=0.24664 versus static 0.25; ETH=0.25112 versus static 0.25. No LLM choice-return estimate is available due to full abstention. Baseline six-day mean daily excess versus BTC=+2.311187 percentage points and ETH=+2.417523 percentage points simply reflects fixed cash during a declining market sample, not predictive skill.
 - **Research utility risk:** The frozen LLM prompt explicitly says `If evidence is weak, prefer ABSTAIN`. Five abstentions are not proof of no probabilistic forecasting value, but there is currently **no observed selection-decision value**. Do not change prompt midstream or treat ABSTAIN as USDT. At the next short operational checkpoint, evaluate whether continued paid LLM calls provide enough marginal information value; a different prompt would require a separately versioned, forward-only experiment.
+- **2026-11-18 seven-feedback-day decision gate:** Operator `ata shadow score` reports `baseline.settled_days=8` (decision days Nov 10–17 UTC) and `llm.settled_days=7` (Nov 11–17 UTC). LLM **abstained 7/7 days** with **0 non-abstained selection days**; therefore all choice gross-return and excess-return fields are `null`. LLM mean Brier BTC = **0.25051429** and ETH = **0.25371429**, both worse than fixed p=0.5 Brier **0.25** in this small sample; these deltas do NOT establish persistent forecasting inferiority. Baseline cash mean excess versus BTC=+1.810519 percentage points/day and ETH=+1.884219 percentage points/day across 8 days, not comparable to LLM choice returns, and not predictive alpha.
+- **Decision at seven-day gate:** The frozen M4 LLM-v1 has not demonstrated marginal selection-decision value and no descriptive improvement over the fixed direction-probability reference. **Recommend pausing paid daily LLM calls** (set `ATA_SHADOW_ENABLE_LLM=0` in root-only `/etc/ata/shadow.env`) while leaving Baseline observer and settler active. This is a research cost-control recommendation, **not an assertion the operator has actually disabled LLM or a statistical proof that all LLM forecasting is futile**. User authorization/actual server configuration has not been confirmed. Preserve all existing LLM forecasts and settle outstanding ones; never backfill or rewrite. If exploring a different model/prompt or probability-only evaluation later, separately preregister/version a fresh forward-only experiment; do not salvage the frozen cohort.
 - Long-term, replace curl User-Agent compatibility with a narrow edge security rule rather than disabling WAF broadly.
 
 The approved engineering experiment starts with one research model. Stop or disable daily LLM usage if it does not demonstrate decision-relevant value after sufficient prospective evidence; preserve a low-cost deterministic pipeline.
@@ -163,11 +165,11 @@ The approved engineering experiment starts with one research model. Stop or disa
 
 ## 11. Next actions
 
-1. **Stop M4 feature development and ad hoc provider probes.** Collect genuine daily Baseline and LLM forecasts with as-of snapshots and delayed 24h feedback. Keep model/prompt/thresholds frozen. No missed-day backfills.
-2. At approximately the seven-LLM-feedback-day checkpoint (2026-11-18 09:05 UTC+8, assuming uninterrupted issuance and settlement), audit scheduled versus saved forecasts, provider timeouts, matching snapshots, settlement and abstention. If 100% abstention persists, assess stopping paid LLM collection on marginal decision value before committing to 60 days; do not tune this frozen model based on the observed outcomes.
-3. After 30 genuine LLM feedback days, inspect preliminary calibration, abstention and matched-day baseline comparisons; after at least 60, separately assess paired uncertainty, costs, and exposure. Neither threshold authorizes simulation or trading.
-4. Later inspect edge filtering before Nginx and replace curl User-Agent mimicry with a narrowly scoped gateway allowance; never globally disable WAF.
-5. Preserve 2026-11-10 missing LLM feedback as missing, H001's sealed holdout, and all permissions: trading=false, account_simulation=false, ticket_generation=false.
+1. **Recommend pausing paid LLM shadow calls on marginal value grounds** using `ATA_SHADOW_ENABLE_LLM=0` in the existing service environment file, while preserving the BaseLine daily collection and delayed settlement. This is recommended only; it does not imply server configuration was changed.
+2. Preserve all already-written LLM forecasts, including any Nov 18 pending record, and settle their legitimate next-day feedback without backdating or modifying historical records.
+3. Avoid midstream prompt tuning, thresholds, 60-day spending commitments, trading/account simulation, or agent expansion. A future economically distinct prediction question or calibrated-probability-only experiment would require separate prospective preregistration and versioning.
+4. At a low-cost operational checkpoint, confirm scheduled Baseline collection and settlement remain healthy after any LLM disablement. Longer term replace curl User-Agent mimicry with a narrowly scoped gateway rule if LLM use resumes.
+5. Keep M3-H001 permanently archived and its holdout sealed; trading=false, account_simulation=false, ticket_generation=false.
 
 ## 12. Stop conditions
 
